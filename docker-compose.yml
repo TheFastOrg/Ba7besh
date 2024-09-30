@@ -1,0 +1,6 @@
+﻿services:
+  ba7besh:
+    image: ba7besh
+    build:
+      context: .
+      dockerfile: Ba7besh/Dockerfile
