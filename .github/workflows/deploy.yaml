@@ -1,0 +1,63 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - master  # Change as needed
+  pull_request:
+    branches:
+      - master  # Change as needed
+
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Setup .NET
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore Ba7besh.sln
+
+      # Build and Publish API project
+      - name: Build and Publish API
+        run: dotnet publish Ba7besh.Api -c Release -o ./output
+
+      # Archive the build output
+      - name: Create Zip
+        run: cd output && zip -r ../Ba7beshApi.zip . && cd ..
+        
+      # Set up Pulumi
+      - name: Setup Pulumi
+        uses: pulumi/actions@v6
+        with:
+          work-dir: Ba7besh.Infrastructure  # The directory with Pulumi.yaml
+
+      # Upload the built artifact to Azure Storage and trigger App Service deployment
+      - name: Deploy to Azure
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}  # Pulumi Access Token from GitHub secrets
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          cd Ba7besh.Infrastructure
+          pulumi stack init dev || echo "Stack dev already exists"
+          pulumi stack select dev
+          echo "" > Pulumi.dev.yaml
+          pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi.zip
+          pulumi up --stack dev --yes

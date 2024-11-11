@@ -1,0 +1,9 @@
+name: ba7besh
+runtime: dotnet
+description: ba7besh app
+config:
+  azure-native:location: WestEurope
+  pulumi:tags:
+    value:
+      pulumi:template: azure-csharp
+      environment: dev

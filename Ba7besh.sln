@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh", "Ba7besh\Ba7besh.csproj", "{A5A090BC-60AD-4956-94ED-2E21DBF1943A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Api", "Ba7besh.Api\Ba7besh.Api.csproj", "{A5A090BC-60AD-4956-94ED-2E21DBF1943A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FEDC1984-F15F-4231-9424-572991B0C9BE}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Infrastructure", "Ba7besh.Infrastructure\Ba7besh.Infrastructure.csproj", "{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,5 +19,9 @@ Global
 		{A5A090BC-60AD-4956-94ED-2E21DBF1943A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5A090BC-60AD-4956-94ED-2E21DBF1943A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5A090BC-60AD-4956-94ED-2E21DBF1943A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
