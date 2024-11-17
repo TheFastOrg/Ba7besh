@@ -36,10 +36,11 @@ jobs:
       # Inject Firebase Credentials from GitHub Secrets
       - name: Configure Firebase Credentials
         run: |
-          mkdir -p ./secrets
-          echo "${{ secrets.FIREBASE_CREDENTIALS }}" > ./secrets/firebase-credentials.json
+          cd Ba7besh.Api
+          mkdir -p ./Secrets
+          echo "${{ secrets.FIREBASE_CREDENTIALS }}" > ./Secrets/firebase-credentials.json
         env:
-          Firebase__CredentialsPath: ./secrets/firebase-credentials.json
+          FIREBASE_CREDENTIALS_PATH: ./Secrets/firebase-credentials.json
           
       # Generate combined version (commit SHA + date-time)
       - name: Generate Combined Version
@@ -82,5 +83,6 @@ jobs:
           pulumi stack select dev
           echo "" > Pulumi.dev.yaml
           pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip
+          pulumi config set ba7besh:firebaseCredentialsPath ${{ env.FIREBASE_CREDENTIALS_PATH }}
           pulumi config set ba7besh:servicePrincipalId ${{ secrets.AZURE_CLIENT_ID }}
           pulumi up --stack dev --yes

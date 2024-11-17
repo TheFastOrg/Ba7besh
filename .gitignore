@@ -1,6 +1,6 @@
 
 **/appsettings.json
-secrets/
+Ba7besh.Api/Secrets/**
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/aspnetcore,pulumi+stacks

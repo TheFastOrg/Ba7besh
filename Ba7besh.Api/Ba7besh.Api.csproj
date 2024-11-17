@@ -26,5 +26,9 @@
       <ProjectReference Include="..\Ba7besh.Application\Ba7besh.Application.csproj" />
       <ProjectReference Include="..\Ba7besh.Infrastructure\Ba7besh.Infrastructure.csproj" />
     </ItemGroup>
-
+    <ItemGroup>
+        <None Update="Secrets/firebase-credentials.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

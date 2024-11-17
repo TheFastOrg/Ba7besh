@@ -92,7 +92,7 @@ public class MainStack : Stack
             },
             Location = azureLocation // Explicitly set the location
         });
-
+        var firebaseCredentialsPath = config.Require("firebaseCredentialsPath");
         var appService = new WebApp("ba7besh-app", new WebAppArgs
         {
             ResourceGroupName = resourceGroup.Name,
@@ -113,6 +113,11 @@ public class MainStack : Stack
                     {
                         Name = "WEBSITE_RUN_FROM_PACKAGE",
                         Value = blobUrl
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name ="Firebase__CredentialsPath",
+                        Value = firebaseCredentialsPath
                     }
                 }
             }
