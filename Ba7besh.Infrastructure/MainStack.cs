@@ -104,21 +104,23 @@ public class MainStack : Stack
         var spContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
-            RoleDefinitionId = "b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
-            Scope = resourceGroup.Id
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
+            Scope = resourceGroup.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
         });
         var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
-            RoleDefinitionId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe", //Storage Blob Data Contributor
-            Scope = storageAccount.Id
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Storage Blob Data Contributor
+            Scope = storageAccount.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
         });
 
         // Assign Storage Blob Data Reader Role to Managed Identity
         var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
         {
             PrincipalId = appService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
-            RoleDefinitionId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
             Scope = storageAccount.Id
         });
         Endpoint = appService.DefaultHostName.Apply(hostname => $"https://{hostname}");
