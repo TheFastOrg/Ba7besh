@@ -39,9 +39,9 @@ jobs:
           cd Ba7besh.Api
           mkdir -p ./Secrets
           echo "${{ secrets.FIREBASE_CREDENTIALS }}" > ./Secrets/firebase-credentials.json
-        env:
-          FIREBASE_CREDENTIALS_PATH: ./Secrets/firebase-credentials.json
-          
+          FIREBASE_CREDENTIALS_PATH="./Secrets/firebase-credentials.json"
+          echo "FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH" >> $GITHUB_ENV
+      
       # Generate combined version (commit SHA + date-time)
       - name: Generate Combined Version
         id: generate_version
