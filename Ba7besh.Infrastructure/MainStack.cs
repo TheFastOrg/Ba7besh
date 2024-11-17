@@ -53,7 +53,7 @@ public class MainStack : Stack
             ResourceGroupName = resourceGroup.Name,
             ContainerName = container.Name,
             Source = new FileAsset(zipPath), // Path to the zip file in your GitHub Actions output
-            ContentType = "application/zip"
+            ContentType = "application/zip",
         });
 
 
@@ -116,7 +116,7 @@ public class MainStack : Stack
                     DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(5)).ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 SharedAccessExpiryTime = DateTime.UtcNow.AddYears(10).ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Resource = SignedResource.C, // Access level: Container
-                Permissions = Permissions.R,
+                Permissions = $"{Permissions.R}{Permissions.W}{Permissions.C}{Permissions.U}{Permissions.L}",
                 ResourceGroupName = resourceGroupName,
                 CanonicalizedResource = $"/blob/{accountName}/{containerName}" // Set correctly with `/blob/`
             });
