@@ -49,7 +49,7 @@ public class MainStack : Stack
         var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
-            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Storage Blob Data Contributor
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe", //Storage Blob Data Contributor
             Scope = storageAccount.Id,
             PrincipalType = PrincipalType.ServicePrincipal
         });
@@ -72,7 +72,7 @@ public class MainStack : Stack
             ContainerName = container.Name,
             Source = new FileAsset(zipPath), // Path to the zip file in your GitHub Actions output
             ContentType = "application/zip",
-        });
+        }, new() {DependsOn = spStorageContributorRoleAssignment});
 
 
         var blobUrl = GetBlobReadSasUrl(blob, storageAccount, container, resourceGroup.Name);
