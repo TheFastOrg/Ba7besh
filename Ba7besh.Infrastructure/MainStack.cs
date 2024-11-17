@@ -107,7 +107,7 @@ public class MainStack : Stack
             RoleDefinitionId = "b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
             Scope = resourceGroup.Id
         });
-        var spStorageContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
+        var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
             RoleDefinitionId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe", //Storage Blob Data Contributor
