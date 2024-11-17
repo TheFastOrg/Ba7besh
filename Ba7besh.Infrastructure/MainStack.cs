@@ -23,7 +23,7 @@ public class MainStack : Stack
         var resourceGroup = new ResourceGroup("ba7besh-rg", new ResourceGroupArgs
         {
             ResourceGroupName = "ba7besh-resource-group", // Explicitly set the resource group name
-            Location = azureLocation
+            Location = azureLocation,
         });
         var spContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
         {
@@ -32,6 +32,7 @@ public class MainStack : Stack
             Scope = resourceGroup.Id,
             PrincipalType = PrincipalType.ServicePrincipal
         });
+        
         // Create a storage account
         var storageAccount = new StorageAccount("ba7beshsa", new StorageAccountArgs
         {
@@ -43,7 +44,7 @@ public class MainStack : Stack
             {
                 Name = SkuName.Standard_LRS
             }
-        });
+        }, new() { DependsOn = spContributorRoleAssignment});
        
         var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
@@ -53,14 +54,13 @@ public class MainStack : Stack
             PrincipalType = PrincipalType.ServicePrincipal
         });
 
-
         // Create a storage container
         var container = new BlobContainer("zips", new BlobContainerArgs
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
             PublicAccess = PublicAccess.None
-        });
+        }, new() {DependsOn = spStorageContributorRoleAssignment});
 
         // Upload the API `.zip` file to the blob container
         var zipPath = config.Require("ba7beshZipPath");
