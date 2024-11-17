@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Pulumi;
 using Pulumi.AzureNative.Resources;
 using Pulumi.AzureNative.Storage;
@@ -45,7 +46,8 @@ public class MainStack : Stack
 
         // Upload the API `.zip` file to the blob container
         var zipPath = config.Require("ba7beshZipPath");
-        var blob = new Blob("ba7beshApiZip", new BlobArgs
+        var zipFileName = zipPath.Split("/").Last();
+        var blob = new Blob(zipFileName, new BlobArgs
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
