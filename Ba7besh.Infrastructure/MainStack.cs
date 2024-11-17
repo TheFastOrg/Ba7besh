@@ -121,7 +121,8 @@ public class MainStack : Stack
         {
             PrincipalId = appService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
             RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
-            Scope = storageAccount.Id
+            Scope = storageAccount.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
         });
         Endpoint = appService.DefaultHostName.Apply(hostname => $"https://{hostname}");
     }
