@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Infrastructure", "Ba7besh.Infrastructure\Ba7besh.Infrastructure.csproj", "{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Deployment", "Ba7besh.Deployment\Ba7besh.Deployment.csproj", "{D4B57BC2-94AA-43CA-83C6-34BD3C4EB060}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

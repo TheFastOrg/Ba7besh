@@ -9,7 +9,7 @@ using Pulumi.AzureNative.Web;
 using Pulumi.AzureNative.Web.Inputs;
 using ManagedServiceIdentityType = Pulumi.AzureNative.Web.ManagedServiceIdentityType;
 
-namespace Ba7besh.Infrastructure;
+namespace Ba7besh.Deployment;
 
 public class MainStack : Stack
 {
