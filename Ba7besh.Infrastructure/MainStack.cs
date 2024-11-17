@@ -18,13 +18,20 @@ public class MainStack : Stack
         var config = new Config();
         var appServicePlanSku = config.Get("appServicePlanSku") ?? "F1"; // Default to Free Tier
         var azureLocation = config.Get("azure-native:location") ?? "WestEurope"; // Changed to a more common location
+        var servicePrincipalId = config.Require("servicePrincipalId");
 
         var resourceGroup = new ResourceGroup("ba7besh-rg", new ResourceGroupArgs
         {
             ResourceGroupName = "ba7besh-resource-group", // Explicitly set the resource group name
             Location = azureLocation
         });
-
+        var spContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
+        {
+            PrincipalId = servicePrincipalId,
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
+            Scope = resourceGroup.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
+        });
         // Create a storage account
         var storageAccount = new StorageAccount("ba7beshsa", new StorageAccountArgs
         {
@@ -37,6 +44,15 @@ public class MainStack : Stack
                 Name = SkuName.Standard_LRS
             }
         });
+       
+        var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
+        {
+            PrincipalId = servicePrincipalId,
+            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Storage Blob Data Contributor
+            Scope = storageAccount.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
+        });
+
 
         // Create a storage container
         var container = new BlobContainer("zips", new BlobContainerArgs
@@ -99,23 +115,7 @@ public class MainStack : Stack
                 }
             }
         });
-
-        var servicePrincipalId = config.Require("servicePrincipalId");
-        var spContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
-        {
-            PrincipalId = servicePrincipalId,
-            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
-            Scope = resourceGroup.Id,
-            PrincipalType = PrincipalType.ServicePrincipal
-        });
-        var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
-        {
-            PrincipalId = servicePrincipalId,
-            RoleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c", //Storage Blob Data Contributor
-            Scope = storageAccount.Id,
-            PrincipalType = PrincipalType.ServicePrincipal
-        });
-
+        
         // Assign Storage Blob Data Reader Role to Managed Identity
         var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
         {
