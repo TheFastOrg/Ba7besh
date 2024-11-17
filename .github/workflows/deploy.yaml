@@ -32,14 +32,27 @@ jobs:
       # Restore dependencies
       - name: Restore dependencies
         run: dotnet restore Ba7besh.sln
-
+        
+      # Generate combined version (commit SHA + date-time)
+      - name: Generate Combined Version
+        id: generate_version
+        run: |
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          VERSION=$(date +'%Y%m%d-%H%M%S')
+          COMBINED_VERSION="${COMMIT_SHA}-${VERSION}"
+          echo "COMBINED_VERSION=$COMBINED_VERSION" >> $GITHUB_ENV
+          echo "Generated version: $COMBINED_VERSION"
+          
       # Build and Publish API project
       - name: Build and Publish API
         run: dotnet publish Ba7besh.Api -c Release -o ./output
 
-      # Archive the build output
-      - name: Create Zip
-        run: cd output && zip -r ../Ba7beshApi.zip . && cd ..
+      # Create versioned Zip with combined version
+      - name: Create Versioned Zip
+        run: |
+          cd output
+          zip -r ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip .
+          cd ..
         
       # Set up Pulumi
       - name: Setup Pulumi
@@ -60,5 +73,5 @@ jobs:
           pulumi stack init dev || echo "Stack dev already exists"
           pulumi stack select dev
           echo "" > Pulumi.dev.yaml
-          pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi.zip
+          pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip
           pulumi up --stack dev --yes
