@@ -41,7 +41,7 @@ public class MainStack : Stack
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
-            PublicAccess = PublicAccess.None
+            PublicAccess = PublicAccess.Container
         });
 
         // Upload the API `.zip` file to the blob container
