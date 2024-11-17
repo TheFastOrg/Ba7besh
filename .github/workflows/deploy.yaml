@@ -74,4 +74,5 @@ jobs:
           pulumi stack select dev
           echo "" > Pulumi.dev.yaml
           pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip
+          pulumi config set ba7besh:servicePrincipalId ${{ secrets.AZURE_CLIENT_ID }}
           pulumi up --stack dev --yes

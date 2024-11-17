@@ -1,11 +1,13 @@
 using System;
 using System.Linq;
 using Pulumi;
+using Pulumi.AzureNative.Authorization;
 using Pulumi.AzureNative.Resources;
 using Pulumi.AzureNative.Storage;
 using Pulumi.AzureNative.Storage.Inputs;
 using Pulumi.AzureNative.Web;
 using Pulumi.AzureNative.Web.Inputs;
+using ManagedServiceIdentityType = Pulumi.AzureNative.Web.ManagedServiceIdentityType;
 
 namespace Ba7besh.Infrastructure;
 
@@ -41,7 +43,7 @@ public class MainStack : Stack
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
-            PublicAccess = PublicAccess.Container
+            PublicAccess = PublicAccess.None
         });
 
         // Upload the API `.zip` file to the blob container
@@ -77,6 +79,10 @@ public class MainStack : Stack
         {
             ResourceGroupName = resourceGroup.Name,
             Name = "ba7besh-app",
+            Identity = new ManagedServiceIdentityArgs
+            {
+                Type = ManagedServiceIdentityType.SystemAssigned
+            },
             ServerFarmId = appServicePlan.Id,
             Location = azureLocation, // Explicitly set the location
             SiteConfig = new SiteConfigArgs
@@ -94,6 +100,27 @@ public class MainStack : Stack
             }
         });
 
+        var servicePrincipalId = config.Require("servicePrincipalId");
+        var spContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
+        {
+            PrincipalId = servicePrincipalId,
+            RoleDefinitionId = "b24988ac-6180-42a0-ab88-20f7382dd24c", //Contributor
+            Scope = resourceGroup.Id
+        });
+        var spStorageContributorRoleAssignment = new RoleAssignment("spContributorRole", new RoleAssignmentArgs
+        {
+            PrincipalId = servicePrincipalId,
+            RoleDefinitionId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe", //Storage Blob Data Contributor
+            Scope = storageAccount.Id
+        });
+
+        // Assign Storage Blob Data Reader Role to Managed Identity
+        var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
+        {
+            PrincipalId = appService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
+            RoleDefinitionId = "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
+            Scope = storageAccount.Id
+        });
         Endpoint = appService.DefaultHostName.Apply(hostname => $"https://{hostname}");
     }
 
