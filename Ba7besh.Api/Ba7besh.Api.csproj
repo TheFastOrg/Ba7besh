@@ -5,13 +5,26 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RootNamespace>Ba7besh</RootNamespace>
+        <UserSecretsId>ddda0e7d-0889-4083-8b94-7477dd3ae070</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+      <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+      <PackageReference Include="Paramore.Brighter" Version="9.9.7" />
+      <PackageReference Include="Paramore.Brighter.Extensions.DependencyInjection" Version="9.9.7" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Ba7besh.Application\Ba7besh.Application.csproj" />
+      <ProjectReference Include="..\Ba7besh.Infrastructure\Ba7besh.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

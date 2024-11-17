@@ -32,7 +32,15 @@ jobs:
       # Restore dependencies
       - name: Restore dependencies
         run: dotnet restore Ba7besh.sln
-        
+      
+      # Inject Firebase Credentials from GitHub Secrets
+      - name: Configure Firebase Credentials
+        run: |
+          mkdir -p ./secrets
+          echo "${{ secrets.FIREBASE_CREDENTIALS }}" > ./secrets/firebase-credentials.json
+        env:
+          Firebase__CredentialsPath: ./secrets/firebase-credentials.json
+          
       # Generate combined version (commit SHA + date-time)
       - name: Generate Combined Version
         id: generate_version

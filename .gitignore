@@ -1,6 +1,6 @@
 
 **/appsettings.json
-
+secrets/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/aspnetcore,pulumi+stacks
