@@ -38,7 +38,7 @@ jobs:
         run: |
           cd Ba7besh.Api
           mkdir -p ./Secrets
-          printf '%s' "${{ secrets.FIREBASE_CREDENTIALS }}" > ./Secrets/firebase-credentials.json
+          echo "${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}" | base64 -d > ./Secrets/firebase-credentials.json
           FIREBASE_CREDENTIALS_PATH="./Secrets/firebase-credentials.json"
           echo "FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH" >> $GITHUB_ENV
       
