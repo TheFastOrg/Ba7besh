@@ -1,11 +1,11 @@
-using Ba7besh.Application.UserRegistration;
+using Ba7besh.Application.Authentication;
 using Ba7besh.Infrastructure;
 using Paramore.Brighter.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
-builder.Services.AddSingleton<IRegisterUserService>(_ =>
+builder.Services.AddSingleton<IAuthService>(_ =>
 {
     var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
     return new FirebaseAuthService(firebaseCredentialsPath);

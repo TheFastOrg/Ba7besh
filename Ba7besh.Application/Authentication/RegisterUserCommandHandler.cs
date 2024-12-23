@@ -1,13 +1,13 @@
 using Paramore.Brighter;
 
-namespace Ba7besh.Application.UserRegistration;
+namespace Ba7besh.Application.Authentication;
 
-public class RegisterUserCommandHandler(IRegisterUserService authService) : RequestHandlerAsync<RegisterUserCommand>
+public class RegisterUserCommandHandler(IAuthService authService) : RequestHandlerAsync<RegisterUserCommand>
 {
     public override async Task<RegisterUserCommand> HandleAsync(RegisterUserCommand command,
         CancellationToken cancellationToken = default)
     {
-        var result = await authService.RegisterAsync(command.MobileNumber, command.Password);
+        var result = await authService.RegisterWithMobileAsync(command.MobileNumber, command.Password);
 
         if (!result.Success)
             throw new InvalidOperationException("Registration failed.");

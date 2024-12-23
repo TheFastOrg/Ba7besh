@@ -1,16 +1,16 @@
-using Ba7besh.Application.UserRegistration;
+using Ba7besh.Application.Authentication;
 using Moq;
 
 namespace Ba7besh.Application.Tests;
 
 public class RegisterUserTests
 {
-    private readonly Mock<IRegisterUserService> _authServiceMock;
+    private readonly Mock<IAuthService> _authServiceMock;
     private readonly RegisterUserCommandHandler _handler;
 
     public RegisterUserTests()
     {
-        _authServiceMock = new Mock<IRegisterUserService>();
+        _authServiceMock = new Mock<IAuthService>();
         _handler = new RegisterUserCommandHandler(_authServiceMock.Object);
     }
 
@@ -21,8 +21,8 @@ public class RegisterUserTests
         var command = new RegisterUserCommand("+963912345678", "StrongPassword123!");
 
         _authServiceMock
-            .Setup(s => s.RegisterAsync(command.MobileNumber, command.Password))
-            .ReturnsAsync(new UserRegistrationResult
+            .Setup(s => s.RegisterWithMobileAsync(command.MobileNumber, command.Password))
+            .ReturnsAsync(new AuthenticationResult
             {
                 Success = true,
                 UserId = "new-user-id"
@@ -33,7 +33,7 @@ public class RegisterUserTests
 
         // Assert
         Assert.Equal(command, result);
-        _authServiceMock.Verify(s => s.RegisterAsync(command.MobileNumber, command.Password), Times.Once);
+        _authServiceMock.Verify(s => s.RegisterWithMobileAsync(command.MobileNumber, command.Password), Times.Once);
     }
 
 
@@ -44,8 +44,8 @@ public class RegisterUserTests
         var command = new RegisterUserCommand("+963912345678", "StrongPassword123!");
 
         _authServiceMock
-            .Setup(s => s.RegisterAsync(command.MobileNumber, command.Password))
-            .ReturnsAsync(new UserRegistrationResult
+            .Setup(s => s.RegisterWithMobileAsync(command.MobileNumber, command.Password))
+            .ReturnsAsync(new AuthenticationResult
             {
                 Success = false,
                 UserId = null
@@ -55,6 +55,6 @@ public class RegisterUserTests
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.HandleAsync(command, CancellationToken.None));
 
-        _authServiceMock.Verify(s => s.RegisterAsync(command.MobileNumber, command.Password), Times.Once);
+        _authServiceMock.Verify(s => s.RegisterWithMobileAsync(command.MobileNumber, command.Password), Times.Once);
     }
 }

@@ -1,11 +1,11 @@
-using Ba7besh.Application.UserRegistration;
+using Ba7besh.Application.Authentication;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 
 namespace Ba7besh.Infrastructure;
 
-public class FirebaseAuthService : IRegisterUserService
+public class FirebaseAuthService : IAuthService
 {
     public FirebaseAuthService(string firebaseCredentialsPath)
     {
@@ -16,7 +16,7 @@ public class FirebaseAuthService : IRegisterUserService
         });
     }
 
-    public async Task<UserRegistrationResult> RegisterAsync(string mobileNumber, string password)
+    public async Task<AuthenticationResult> RegisterWithMobileAsync(string mobileNumber, string password)
     {
         var userRecordArgs = new UserRecordArgs
         {
@@ -28,19 +28,85 @@ public class FirebaseAuthService : IRegisterUserService
         {
             var userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(userRecordArgs);
 
-            return new UserRegistrationResult
+            return new AuthenticationResult
             {
                 Success = true,
-                UserId = userRecord.Uid
+                UserId = userRecord.Uid,
+                IsNewUser = true
             };
         }
         catch (Exception ex)
         {
-            return new UserRegistrationResult
+            return new AuthenticationResult
             {
                 Success = false,
-                UserId = null
+                ErrorMessage = ex.Message
             };
         }
+    }
+
+    public async Task<AuthenticationResult> AuthenticateWithGoogleAsync(string idToken)
+    {
+        try
+        {
+            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            var uid = decodedToken.Uid;
+
+            var existingUser = await GetUserAsync(uid);
+            if (existingUser != null)
+            {
+                var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
+                return new AuthenticationResult
+                {
+                    Success = true,
+                    UserId = existingUser.Uid,
+                    Token = customToken,
+                    IsNewUser = false
+                };
+            }
+
+            var newUser = await CreateNewUserAsync(uid, decodedToken.Claims);
+            var newCustomToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(newUser.Uid);
+            return new AuthenticationResult
+            {
+                Success = true,
+                UserId = newUser.Uid,
+                Token = newCustomToken,
+                IsNewUser = true
+            };
+        }
+        catch (FirebaseAuthException ex)
+        {
+            return new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+
+    private static async Task<UserRecord?> GetUserAsync(string uid)
+    {
+        try
+        {
+            return await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+        }
+        catch (FirebaseAuthException)
+        {
+            return null;
+        }
+    }
+
+    private static async Task<UserRecord> CreateNewUserAsync(string uid, IReadOnlyDictionary<string, object> claims)
+    {
+        var userArgs = new UserRecordArgs
+        {
+            Uid = uid,
+            Email = claims.GetValueOrDefault("email")?.ToString(),
+            DisplayName = claims.GetValueOrDefault("name")?.ToString(),
+            PhotoUrl = claims.GetValueOrDefault("picture")?.ToString()
+        };
+
+        return await FirebaseAuth.DefaultInstance.CreateUserAsync(userArgs);
     }
 }
