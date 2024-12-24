@@ -12,6 +12,26 @@
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
+        <None Remove="Data\business.csv" />
+        <Content Include="Data\business.csv">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Data\business_categories.csv" />
+        <Content Include="Data\business_categories.csv">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Data\business_tags.csv" />
+        <Content Include="Data\business_tags.csv">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Data\business_working_hours.csv" />
+        <Content Include="Data\business_working_hours.csv">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <None Remove="Data\category.csv" />
+        <Content Include="Data\category.csv">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -19,6 +39,9 @@
       <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
       <PackageReference Include="Paramore.Brighter" Version="9.9.7" />
       <PackageReference Include="Paramore.Brighter.Extensions.DependencyInjection" Version="9.9.7" />
+      <PackageReference Include="Paramore.Darker.AspNetCore" Version="4.0.1" />
+      <PackageReference Include="Paramore.Darker.Policies" Version="4.0.1" />
+      <PackageReference Include="Paramore.Darker.QueryLogging" Version="4.0.1" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
     </ItemGroup>
 

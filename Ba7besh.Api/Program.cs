@@ -1,6 +1,10 @@
 using Ba7besh.Application.Authentication;
+using Ba7besh.Application.RestaurantDiscovery;
 using Ba7besh.Infrastructure;
 using Paramore.Brighter.Extensions.DependencyInjection;
+using Paramore.Darker.AspNetCore;
+using Paramore.Darker.Policies;
+using Paramore.Darker.QueryLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
@@ -10,6 +14,12 @@ builder.Services.AddSingleton<IAuthService>(_ =>
     var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
     return new FirebaseAuthService(firebaseCredentialsPath);
 });
+builder.Services.AddSingleton<IRestaurantSearchService>(sp => 
+    new CsvRestaurantSearchService(
+        Path.Combine("Data", "business.csv"),
+        Path.Combine("Data", "business_categories.csv"),
+        Path.Combine("Data", "business_working_hours.csv"),
+        Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to
@@ -18,11 +28,12 @@ builder.Services.AddBrighter(options =>
         options.MapperLifetime = ServiceLifetime.Singleton;
     })
     .AutoFromAssemblies(typeof(RegisterUserCommandHandler).Assembly);
+builder.Services.AddDarker(options => options.QueryProcessorLifetime = ServiceLifetime.Scoped)
+    .AddHandlersFromAssemblies(typeof(SearchRestaurantsQueryHandler).Assembly)
+    .AddJsonQueryLogging()
+    .AddDefaultPolicies();
 builder.Services.AddApiVersioning(
-        options =>
-        {
-            options.ReportApiVersions = true;
-        })
+        options => { options.ReportApiVersions = true; })
     .AddApiExplorer(
         options =>
         {
@@ -32,8 +43,6 @@ builder.Services.AddApiVersioning(
 builder.Services.AddControllers(options => { options.RespectBrowserAcceptHeader = true; });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
 
 
 var app = builder.Build();
