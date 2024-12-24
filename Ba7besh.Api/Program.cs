@@ -1,4 +1,5 @@
 using Ba7besh.Application.Authentication;
+using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.RestaurantDiscovery;
 using Ba7besh.Infrastructure;
 using Paramore.Brighter.Extensions.DependencyInjection;
@@ -14,13 +15,15 @@ builder.Services.AddSingleton<IAuthService>(_ =>
     var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
     return new FirebaseAuthService(firebaseCredentialsPath);
 });
-builder.Services.AddSingleton<IRestaurantSearchService>(sp => 
+builder.Services.AddSingleton<IRestaurantSearchService>(_ => 
     new CsvRestaurantSearchService(
         Path.Combine("Data", "business.csv"),
         Path.Combine("Data", "category.csv"),
         Path.Combine("Data", "business_categories.csv"),
         Path.Combine("Data", "business_working_hours.csv"),
         Path.Combine("Data", "business_tags.csv")));
+builder.Services.AddSingleton<ICategoryRepository>(_ => 
+    new CsvCategoryRepository(Path.Combine("Data", "category.csv")));
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to

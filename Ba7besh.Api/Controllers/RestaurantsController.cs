@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.RestaurantDiscovery;
 using Microsoft.AspNetCore.Mvc;
 using Paramore.Darker;
@@ -27,6 +28,15 @@ public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerB
             PageNumber = pageNumber
         };
 
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
+    
+    [HttpGet("categories")]
+    public async Task<ActionResult<IReadOnlyList<CategoryTreeNode>>> GetCategories(
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetCategoryTreeQuery();
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
