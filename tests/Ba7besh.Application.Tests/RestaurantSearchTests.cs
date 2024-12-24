@@ -170,6 +170,48 @@ public class RestaurantSearchTests
         Assert.Equal(0, result.TotalCount);
     }
 
+    [Fact] 
+    public async Task Should_Return_Restaurants_With_Matching_Tags()
+    {
+        // Arrange
+        var expectedRestaurant = new RestaurantSummary
+        {
+            Id = "1",
+            ArName = "مطعم الشام",
+            EnName = "Damascus Restaurant",
+            Location = "location1",
+            City = "damascus",
+            Type = "restaurant",
+            Tags = ["Pizza", "Salads"]
+        };
+
+        _searchServiceMock.Setup(s =>
+                s.SearchAsync(
+                    It.Is<SearchRestaurantsQuery>(q => 
+                        q.Tags!.Contains("Pizza") && 
+                        q.Tags!.Contains("Salads")),
+                    It.IsAny<CancellationToken>()
+                ))
+            .ReturnsAsync(new SearchRestaurantsResult
+            {
+                Restaurants = [expectedRestaurant],
+                TotalCount = 1,
+                PageSize = 20,
+                PageNumber = 1
+            });
+
+        // Act
+        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery 
+        { 
+            Tags = ["Pizza", "Salads"] 
+        });
+
+        // Assert
+        var restaurant = Assert.Single(result.Restaurants);
+        Assert.Contains("Pizza", restaurant.Tags);
+        Assert.Contains("Salads", restaurant.Tags);
+    }
+    
     [Fact]
     public async Task Should_Pass_Search_Parameters_To_Service_Correctly()
     {

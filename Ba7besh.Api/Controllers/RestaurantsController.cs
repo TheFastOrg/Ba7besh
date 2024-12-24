@@ -16,6 +16,7 @@ public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerB
     public async Task<ActionResult<SearchRestaurantsResult>> Search(
         [FromQuery] string? searchTerm,
         [FromQuery] string? categoryId,
+        [FromQuery] string[]? tags,
         [FromQuery] int pageSize = 20,
         [FromQuery] int pageNumber = 1,
         CancellationToken cancellationToken = default)
@@ -24,6 +25,7 @@ public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerB
         {
             SearchTerm = searchTerm,
             CategoryId = categoryId,
+            Tags = tags,
             PageSize = pageSize,
             PageNumber = pageNumber
         };

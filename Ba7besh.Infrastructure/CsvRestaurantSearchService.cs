@@ -42,6 +42,16 @@ public class CsvRestaurantSearchService(
 
             filteredBusinesses = filteredBusinesses.Where(b => businessIdsInCategory.Contains(b.id));
         }
+        
+        if (query.Tags is { Length: > 0 })
+        {
+            var businessIdsByTags = _businessTags!
+                .Where(bt => !bt.is_deleted && query.Tags.Contains(bt.tag, StringComparer.OrdinalIgnoreCase))
+                .Select(bt => bt.business_id)
+                .ToHashSet();
+
+            filteredBusinesses = filteredBusinesses.Where(b => businessIdsByTags.Contains(b.id));
+        }
 
         var totalCount = filteredBusinesses.Count();
 
