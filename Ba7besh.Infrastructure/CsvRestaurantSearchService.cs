@@ -7,29 +7,19 @@ namespace Ba7besh.Infrastructure;
 
 
 
-public class CsvRestaurantSearchService : IRestaurantSearchService
+public class CsvRestaurantSearchService(
+    string businessCsvPath,
+    string categoriesCsvPath,
+    string businessCategoriesCsvPath,
+    string workingHoursCsvPath,
+    string tagsCsvPath)
+    : IRestaurantSearchService
 {
-    private readonly string _businessCsvPath;
-    private readonly string _categoriesCsvPath;
-    private readonly string _workingHoursCsvPath;
-    private readonly string _tagsCsvPath;
-    
     private List<BusinessRecord>? _businesses;
     private List<BusinessCategoryRecord>? _businessCategories;
     private List<WorkingHourRecord>? _workingHours;
     private List<BusinessTagRecord>? _businessTags;
-
-    public CsvRestaurantSearchService(
-        string businessCsvPath,
-        string categoriesCsvPath,
-        string workingHoursCsvPath,
-        string tagsCsvPath)
-    {
-        _businessCsvPath = businessCsvPath;
-        _categoriesCsvPath = categoriesCsvPath;
-        _workingHoursCsvPath = workingHoursCsvPath;
-        _tagsCsvPath = tagsCsvPath;
-    }
+    private List<CategoryRecord>? _categories;
 
     public async Task<SearchRestaurantsResult> SearchAsync(
         SearchRestaurantsQuery query, 
@@ -94,11 +84,21 @@ public class CsvRestaurantSearchService : IRestaurantSearchService
             .ToList();
     }
 
-    private IReadOnlyList<string> GetCategories(string businessId)
+    private IReadOnlyList<CategoryInfo> GetCategories(string businessId)
     {
-        return _businessCategories!
+        var categoryIds = _businessCategories!
             .Where(bc => bc.business_id == businessId && !bc.is_deleted)
             .Select(bc => bc.category_id)
+            .ToHashSet();
+
+        return _categories!
+            .Where(c => categoryIds.Contains(c.id) && !c.is_deleted)
+            .Select(c => new CategoryInfo
+            {
+                Id = c.id,
+                ArName = c.ar_name,
+                EnName = c.en_name
+            })
             .ToList();
     }
 
@@ -120,29 +120,37 @@ public class CsvRestaurantSearchService : IRestaurantSearchService
             MissingFieldFound = null
         };
 
+        // Load categories
+        using (var reader = new StreamReader(categoriesCsvPath))
+        using (var csv = new CsvReader(reader, config))
+        {
+            _categories = csv.GetRecords<CategoryRecord>().ToList();
+        }
+        
+        
         // Load businesses
-        using (var reader = new StreamReader(_businessCsvPath))
+        using (var reader = new StreamReader(businessCsvPath))
         using (var csv = new CsvReader(reader, config))
         {
             _businesses = csv.GetRecords<BusinessRecord>().ToList();
         }
 
-        // Load categories
-        using (var reader = new StreamReader(_categoriesCsvPath))
+        // Load business categories
+        using (var reader = new StreamReader(businessCategoriesCsvPath))
         using (var csv = new CsvReader(reader, config))
         {
             _businessCategories = csv.GetRecords<BusinessCategoryRecord>().ToList();
         }
 
         // Load working hours
-        using (var reader = new StreamReader(_workingHoursCsvPath))
+        using (var reader = new StreamReader(workingHoursCsvPath))
         using (var csv = new CsvReader(reader, config))
         {
             _workingHours = csv.GetRecords<WorkingHourRecord>().ToList();
         }
 
         // Load tags
-        using (var reader = new StreamReader(_tagsCsvPath))
+        using (var reader = new StreamReader(tagsCsvPath))
         using (var csv = new CsvReader(reader, config))
         {
             _businessTags = csv.GetRecords<BusinessTagRecord>().ToList();
@@ -199,6 +207,19 @@ public class BusinessTagRecord
     public string id { get; set; } = string.Empty;
     public string tag { get; set; } = string.Empty;
     public string business_id { get; set; } = string.Empty;
+    public string created_at { get; set; } = string.Empty;
+    public string? updated_at { get; set; }
+    public string? deleted_at { get; set; }
+    public bool is_deleted { get; set; }
+}
+
+public class CategoryRecord
+{
+    public string id { get; set; } = string.Empty;
+    public string slug { get; set; } = string.Empty;
+    public string ar_name { get; set; } = string.Empty;
+    public string en_name { get; set; } = string.Empty;
+    public string? parent_id { get; set; }
     public string created_at { get; set; } = string.Empty;
     public string? updated_at { get; set; }
     public string? deleted_at { get; set; }

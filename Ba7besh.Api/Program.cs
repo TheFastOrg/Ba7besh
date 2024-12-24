@@ -17,6 +17,7 @@ builder.Services.AddSingleton<IAuthService>(_ =>
 builder.Services.AddSingleton<IRestaurantSearchService>(sp => 
     new CsvRestaurantSearchService(
         Path.Combine("Data", "business.csv"),
+        Path.Combine("Data", "category.csv"),
         Path.Combine("Data", "business_categories.csv"),
         Path.Combine("Data", "business_working_hours.csv"),
         Path.Combine("Data", "business_tags.csv")));

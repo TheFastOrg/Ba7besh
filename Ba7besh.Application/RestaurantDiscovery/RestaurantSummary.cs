@@ -8,7 +8,7 @@ public record RestaurantSummary
     public required string Location { get; init; }
     public required string City { get; init; }
     public required string Type { get; init; }
-    public IReadOnlyList<string> Categories { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<CategoryInfo> Categories { get; init; } = Array.Empty<CategoryInfo>();
     public IReadOnlyList<WorkingHours> WorkingHours { get; init; } = Array.Empty<WorkingHours>();
     public IReadOnlyList<string> Tags { get; init; } = Array.Empty<string>();
 }
