@@ -1,6 +1,7 @@
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.RestaurantDiscovery;
+using Ba7besh.Application.TagManagement;
 using Ba7besh.Infrastructure;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Darker.AspNetCore;
@@ -24,6 +25,8 @@ builder.Services.AddSingleton<IRestaurantSearchService>(_ =>
         Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddSingleton<ICategoryRepository>(_ => 
     new CsvCategoryRepository(Path.Combine("Data", "category.csv")));
+builder.Services.AddSingleton<ITagRepository>(_ => 
+    new CsvTagRepository(Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to
