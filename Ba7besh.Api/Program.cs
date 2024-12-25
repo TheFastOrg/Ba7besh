@@ -1,8 +1,10 @@
+using System.Data;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.RestaurantDiscovery;
 using Ba7besh.Application.TagManagement;
 using Ba7besh.Infrastructure;
+using Npgsql;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Darker.AspNetCore;
 using Paramore.Darker.Policies;
@@ -16,6 +18,11 @@ builder.Services.AddSingleton<IAuthService>(_ =>
     var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
     return new FirebaseAuthService(firebaseCredentialsPath);
 });
+builder.Services.AddSingleton<IDbConnection>(_ =>
+{
+    var dbConnectionString = builder.Configuration["DbConnectionString"];
+    return new NpgsqlConnection(dbConnectionString);
+});
 builder.Services.AddSingleton<IRestaurantSearchService>(_ => 
     new CsvRestaurantSearchService(
         Path.Combine("Data", "business.csv"),
@@ -25,8 +32,6 @@ builder.Services.AddSingleton<IRestaurantSearchService>(_ =>
         Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddSingleton<ICategoryRepository>(_ => 
     new CsvCategoryRepository(Path.Combine("Data", "category.csv")));
-builder.Services.AddSingleton<ITagRepository>(_ => 
-    new CsvTagRepository(Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to
