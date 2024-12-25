@@ -85,5 +85,5 @@ jobs:
           pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip
           pulumi config set ba7besh:firebaseCredentialsPath ${{ env.FIREBASE_CREDENTIALS_PATH }}
           pulumi config set ba7besh:servicePrincipalId ${{ secrets.AZURE_CLIENT_ID }}
-          pulumi config set --secret ba7besh:dbConnectionString ${{ secrets.DB_CONNECTION_STRING }}
+          pulumi config set --secret ba7besh:dbConnectionString "${{ secrets.DB_CONNECTION_STRING }}"
           pulumi up --stack dev --yes
