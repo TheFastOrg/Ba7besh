@@ -1,6 +1,38 @@
 ﻿services:
-  ba7besh:
-    image: ba7besh
+  api:
     build:
       context: .
-      dockerfile: Ba7besh/Dockerfile
+      dockerfile: Ba7besh.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - ./Ba7besh.Api/Secrets:/app/Secrets:ro
+      - ./Ba7besh.Api/Data:/app/Data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      - POSTGRES_USER=ba7besh
+      - POSTGRES_PASSWORD=ba7besh_local_dev
+      - POSTGRES_DB=ba7besh
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ba7besh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
