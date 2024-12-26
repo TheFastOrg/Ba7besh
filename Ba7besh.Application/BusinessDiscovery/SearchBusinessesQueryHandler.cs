@@ -3,14 +3,14 @@ using Dapper;
 using Paramore.Darker;
 using Paramore.Darker.QueryLogging;
 
-namespace Ba7besh.Application.RestaurantDiscovery;
+namespace Ba7besh.Application.BusinessDiscovery;
 
-public class SearchRestaurantsQueryHandler(IDbConnection db)
-    : QueryHandlerAsync<SearchRestaurantsQuery, SearchRestaurantsResult>
+public class SearchBusinessesQueryHandler(IDbConnection db)
+    : QueryHandlerAsync<SearchBusinessesQuery, SearchBusinessesResult>
 {
     [QueryLogging(1)]
-    public override async Task<SearchRestaurantsResult> ExecuteAsync(
-        SearchRestaurantsQuery query,
+    public override async Task<SearchBusinessesResult> ExecuteAsync(
+        SearchBusinessesQuery query,
         CancellationToken cancellationToken = default)
     {
         var whereClauses = new List<string> { "b.is_deleted = FALSE" };
@@ -76,51 +76,51 @@ public class SearchRestaurantsQueryHandler(IDbConnection db)
         parameters.Add("Offset", (query.PageNumber - 1) * query.PageSize);
         parameters.Add("PageSize", query.PageSize);
 
-        var restaurantDictionary = new Dictionary<string, RestaurantSummary>();
+        var businessDictionary = new Dictionary<string, BusinessSummary>();
         var totalCount = 0;
 
         await db.QueryAsync<
-            RestaurantSummary,
+            BusinessSummary,
             CategoryInfo,
             string,
             WorkingHours,
             int,
-            RestaurantSummary>(
+            BusinessSummary>(
             sql,
-            (restaurant, category, tag, workingHour, count) =>
+            (business, category, tag, workingHour, count) =>
             {
                 totalCount = count;
 
-                if (!restaurantDictionary.TryGetValue(restaurant.Id, out var existingRestaurant))
+                if (!businessDictionary.TryGetValue(business.Id, out var existingBusiness))
                 {
-                    restaurantDictionary[restaurant.Id] = restaurant;
-                    existingRestaurant = restaurant;
+                    businessDictionary[business.Id] = business;
+                    existingBusiness = business;
                 }
 
-                if (existingRestaurant.Categories.All(c => c.Id != category.Id))
+                if (existingBusiness.Categories.All(c => c.Id != category.Id))
                 {
-                    existingRestaurant.Categories.Add(category);
+                    existingBusiness.Categories.Add(category);
                 }
 
                 if (!string.IsNullOrEmpty(tag) &&
-                    !existingRestaurant.Tags.Contains(tag))
+                    !existingBusiness.Tags.Contains(tag))
                 {
-                    existingRestaurant.Tags.Add(tag);
+                    existingBusiness.Tags.Add(tag);
                 }
 
-                if (existingRestaurant.WorkingHours.All(wh => wh.Day != workingHour.Day))
+                if (existingBusiness.WorkingHours.All(wh => wh.Day != workingHour.Day))
                 {
-                    existingRestaurant.WorkingHours.Add(workingHour);
+                    existingBusiness.WorkingHours.Add(workingHour);
                 }
 
-                return restaurant;
+                return business;
             },
             parameters,
             splitOn: "category_id,tag,business_id,total_count");
 
-        return new SearchRestaurantsResult
+        return new SearchBusinessesResult
         {
-            Restaurants = restaurantDictionary.Values.ToList(),
+            Businesses = businessDictionary.Values.ToList(),
             TotalCount = totalCount,
             PageSize = query.PageSize,
             PageNumber = query.PageNumber

@@ -1,15 +1,15 @@
-using Ba7besh.Application.RestaurantDiscovery;
+using Ba7besh.Application.BusinessDiscovery;
 using Moq;
 
 namespace Ba7besh.Application.Tests;
 
-public class RestaurantSearchTests: DatabaseTestBase
+public class BusinessesSearchTests: DatabaseTestBase
 {
-    private readonly SearchRestaurantsQueryHandler _handler;
+    private readonly SearchBusinessesQueryHandler _handler;
 
-    public RestaurantSearchTests(PostgresContainerFixture fixture) : base(fixture)
+    public BusinessesSearchTests(PostgresContainerFixture fixture) : base(fixture)
     {
-        _handler = new SearchRestaurantsQueryHandler(Connection);
+        _handler = new SearchBusinessesQueryHandler(Connection);
     }
 
     protected override async Task SeedTestData()
@@ -47,56 +47,56 @@ public class RestaurantSearchTests: DatabaseTestBase
     }
 
     [Fact]
-    public async Task Should_Return_Restaurants_With_Matching_Arabic_Name()
+    public async Task Should_Return_Businesses_With_Matching_Arabic_Name()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery { SearchTerm = "مطعم 1" });
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery { SearchTerm = "مطعم 1" });
 
-        var restaurant = Assert.Single(result.Restaurants);
-        Assert.Equal("مطعم 1", restaurant.ArName);
+        var business = Assert.Single(result.Businesses);
+        Assert.Equal("مطعم 1", business.ArName);
     }
 
     [Fact]
-    public async Task Should_Return_Restaurants_With_Matching_English_Name()
+    public async Task Should_Return_Businesses_With_Matching_English_Name()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery { SearchTerm = "Restaurant 1" });
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery { SearchTerm = "Restaurant 1" });
 
-        var restaurant = Assert.Single(result.Restaurants);
-        Assert.Equal("Restaurant 1", restaurant.EnName);
+        var business = Assert.Single(result.Businesses);
+        Assert.Equal("Restaurant 1", business.EnName);
     }
 
     [Fact]
-    public async Task Should_Return_Restaurants_By_Category()
+    public async Task Should_Return_Businesses_By_Category()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery { CategoryId = "cat1" });
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery { CategoryId = "cat1" });
 
-        var restaurant = Assert.Single(result.Restaurants);
-        var category = Assert.Single(restaurant.Categories);
+        var business = Assert.Single(result.Businesses);
+        var category = Assert.Single(business.Categories);
         Assert.Equal("Category 1", category.EnName);
     }
 
     [Fact]
-    public async Task Should_Return_Restaurants_By_Tags()
+    public async Task Should_Return_Businesses_By_Tags()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery { Tags = ["Pizza"] });
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery { Tags = ["Pizza"] });
 
-        var restaurant = Assert.Single(result.Restaurants);
-        Assert.Contains("Pizza", restaurant.Tags);
+        var business = Assert.Single(result.Businesses);
+        Assert.Contains("Pizza", business.Tags);
     }
 
     [Fact]
-    public async Task Should_Not_Return_Deleted_Restaurants()
+    public async Task Should_Not_Return_Deleted_Businesses()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery());
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery());
 
-        Assert.DoesNotContain(result.Restaurants, r => r.ArName == "مطعم محذوف");
+        Assert.DoesNotContain(result.Businesses, r => r.ArName == "مطعم محذوف");
     }
 
     [Fact]
     public async Task Should_Support_Pagination()
     {
-        var result = await _handler.ExecuteAsync(new SearchRestaurantsQuery { PageSize = 1, PageNumber = 2 });
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery { PageSize = 1, PageNumber = 2 });
 
-        Assert.Single(result.Restaurants);
+        Assert.Single(result.Businesses);
         Assert.Equal(2, result.TotalCount);
         Assert.Equal(2, result.PageNumber);
         Assert.Equal(1, result.PageSize);

@@ -1,7 +1,7 @@
 using System.Data;
 using Ba7besh.Application.Authentication;
+using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.Exceptions;
-using Ba7besh.Application.RestaurantDiscovery;
 using Ba7besh.Application.ReviewManagement;
 using Ba7besh.Infrastructure;
 using Dapper;
@@ -37,7 +37,7 @@ builder.Services.AddBrighter(options =>
     })
     .AutoFromAssemblies(typeof(RegisterUserCommandHandler).Assembly);
 builder.Services.AddDarker(options => options.QueryProcessorLifetime = ServiceLifetime.Scoped)
-    .AddHandlersFromAssemblies(typeof(SearchRestaurantsQueryHandler).Assembly)
+    .AddHandlersFromAssemblies(typeof(SearchBusinessesQueryHandler).Assembly)
     .AddJsonQueryLogging()
     .AddDefaultPolicies();
 builder.Services.AddValidatorsFromAssemblyContaining<SubmitReviewCommandValidator>();

@@ -1,6 +1,6 @@
 using Asp.Versioning;
+using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.CategoryManagement;
-using Ba7besh.Application.RestaurantDiscovery;
 using Ba7besh.Application.ReviewManagement;
 using Ba7besh.Application.TagManagement;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +16,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     : ControllerBase
 {
     [HttpGet("search")]
-    public async Task<ActionResult<SearchRestaurantsResult>> Search(
+    public async Task<ActionResult<SearchBusinessesResult>> Search(
         [FromQuery] string? searchTerm,
         [FromQuery] string? categoryId,
         [FromQuery] string[]? tags,
@@ -24,7 +24,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         [FromQuery] int pageNumber = 1,
         CancellationToken cancellationToken = default)
     {
-        var query = new SearchRestaurantsQuery
+        var query = new SearchBusinessesQuery
         {
             SearchTerm = searchTerm,
             CategoryId = categoryId,

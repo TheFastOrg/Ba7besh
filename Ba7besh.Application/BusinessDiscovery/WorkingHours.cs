@@ -1,4 +1,4 @@
-namespace Ba7besh.Application.RestaurantDiscovery;
+namespace Ba7besh.Application.BusinessDiscovery;
 
 public record WorkingHours
 {

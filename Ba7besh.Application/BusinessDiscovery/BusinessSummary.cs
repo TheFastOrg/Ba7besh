@@ -1,6 +1,6 @@
-namespace Ba7besh.Application.RestaurantDiscovery;
+namespace Ba7besh.Application.BusinessDiscovery;
 
-public record RestaurantSummary
+public record BusinessSummary
 {
     public required string Id { get; init; }
     public required string ArName { get; init; }

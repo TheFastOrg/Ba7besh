@@ -1,8 +1,8 @@
 using Paramore.Darker;
 
-namespace Ba7besh.Application.RestaurantDiscovery;
+namespace Ba7besh.Application.BusinessDiscovery;
 
-public record SearchRestaurantsQuery : IQuery<SearchRestaurantsResult>
+public record SearchBusinessesQuery : IQuery<SearchBusinessesResult>
 {
     public string? SearchTerm { get; init; }
     public string? CategoryId { get; init; }
