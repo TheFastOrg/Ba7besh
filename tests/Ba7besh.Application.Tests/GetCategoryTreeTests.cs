@@ -1,112 +1,80 @@
 using Ba7besh.Application.CategoryManagement;
-using Moq;
 
 namespace Ba7besh.Application.Tests;
 
-
-public class GetCategoryTreeTests
+public class GetCategoryTreeTests : DatabaseTestBase
 {
-   private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
-   private readonly GetCategoryTreeQueryHandler _handler;
+    private readonly GetCategoryTreeQueryHandler _handler;
 
-   public GetCategoryTreeTests()
-   {
-       _categoryRepositoryMock = new Mock<ICategoryRepository>();
-       _handler = new GetCategoryTreeQueryHandler(_categoryRepositoryMock.Object);
-   }
+    public GetCategoryTreeTests(PostgresContainerFixture fixture) : base(fixture)
+    {
+        _handler = new GetCategoryTreeQueryHandler(Connection);
+    }
 
-   [Fact]
-   public async Task Should_Return_Root_Categories_With_SubCategories()
-   {
-       // Arrange
-       var expectedTree = new List<CategoryTreeNode>
-       {
-           new()
-           {
-               Id = "1",
-               ArName = "طعام",
-               EnName = "Food",
-               Slug = "food",
-               SubCategories = new List<CategoryTreeNode>
-               {
-                   new()
-                   {
-                       Id = "2",
-                       ArName = "مشاوي",
-                       EnName = "Grills",
-                       Slug = "grills",
-                       SubCategories = Array.Empty<CategoryTreeNode>()
-                   }
-               }
-           }
-       };
+    protected override async Task SeedTestData()
+    {
+        await Connection.ExecuteAsync(@"
+            INSERT INTO categories (id, ar_name, en_name, slug, created_at, is_deleted) VALUES 
+            ('food-id', 'طعام', 'Food', 'food', CURRENT_TIMESTAMP, false);
+        ");
 
-       _categoryRepositoryMock
-           .Setup(r => r.GetCategoryTreeAsync(It.IsAny<CancellationToken>()))
-           .ReturnsAsync(expectedTree);
+        await Connection.ExecuteAsync(@"
+            INSERT INTO categories (id, ar_name, en_name, slug, parent_id, created_at, is_deleted) VALUES 
+            ('grills-id', 'مشاوي', 'Grills', 'grills', 'food-id', CURRENT_TIMESTAMP, false),
+            ('pizza-id', 'بيتزا', 'Pizza', 'pizza', 'food-id', CURRENT_TIMESTAMP, false),
+            ('deleted-category', 'محذوف', 'Deleted', 'deleted', 'food-id', CURRENT_TIMESTAMP, true);
+        ");
 
-       // Act
-       var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
+        await Connection.ExecuteAsync(@"
+            INSERT INTO categories (id, ar_name, en_name, slug, parent_id, created_at, is_deleted) VALUES 
+            ('sub-grills-id', 'مشاوي دجاج', 'Chicken Grills', 'chicken-grills', 'grills-id', CURRENT_TIMESTAMP, false);
+        ");
+    }
 
-       // Assert
-       var rootCategory = Assert.Single(result);
-       Assert.Equal("طعام", rootCategory.ArName);
-       Assert.Equal("Food", rootCategory.EnName);
-       
-       var subCategory = Assert.Single(rootCategory.SubCategories);
-       Assert.Equal("مشاوي", subCategory.ArName);
-       Assert.Equal("Grills", subCategory.EnName);
-   }
+    [Fact]
+    public async Task Should_Return_Root_Categories_With_SubCategories()
+    {
+        var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
 
-   [Fact]
-   public async Task Should_Handle_Empty_Category_List()
-   {
-       // Arrange
-       _categoryRepositoryMock
-           .Setup(r => r.GetCategoryTreeAsync(It.IsAny<CancellationToken>()))
-           .ReturnsAsync(Array.Empty<CategoryTreeNode>());
+        var rootCategory = Assert.Single(result);
+        Assert.Equal("طعام", rootCategory.ArName);
+        Assert.Equal("Food", rootCategory.EnName);
+        Assert.Equal("food", rootCategory.Slug);
+        
+        Assert.Equal(2, rootCategory.SubCategories.Count);
+        Assert.Contains(rootCategory.SubCategories, c => c.EnName == "Grills");
+        Assert.Contains(rootCategory.SubCategories, c => c.EnName == "Pizza");
+    }
 
-       // Act
-       var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
+    [Fact]
+    public async Task Should_Return_Multi_Level_Category_Tree()
+    {
+        var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
 
-       // Assert
-       Assert.Empty(result);
-   }
-   
-   [Fact]
-   public async Task Should_Return_Multiple_Root_Categories()
-   {
-       // Arrange
-       var expectedTree = new List<CategoryTreeNode>
-       {
-           new()
-           {
-               Id = "1",
-               ArName = "طعام",
-               EnName = "Food",
-               Slug = "food",
-               SubCategories = Array.Empty<CategoryTreeNode>()
-           },
-           new()
-           {
-               Id = "2", 
-               ArName = "مشروبات",
-               EnName = "Drinks",
-               Slug = "drinks",
-               SubCategories = Array.Empty<CategoryTreeNode>()
-           }
-       };
+        var rootCategory = Assert.Single(result);
+        var grillsCategory = rootCategory.SubCategories.Single(c => c.EnName == "Grills");
+        
+        var subGrillsCategory = Assert.Single(grillsCategory.SubCategories);
+        Assert.Equal("مشاوي دجاج", subGrillsCategory.ArName);
+        Assert.Equal("Chicken Grills", subGrillsCategory.EnName);
+    }
 
-       _categoryRepositoryMock
-           .Setup(r => r.GetCategoryTreeAsync(It.IsAny<CancellationToken>()))
-           .ReturnsAsync(expectedTree);
+    [Fact]
+    public async Task Should_Not_Return_Deleted_Categories()
+    {
+        var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
 
-       // Act
-       var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
+        var rootCategory = Assert.Single(result);
+        Assert.DoesNotContain(rootCategory.SubCategories, c => c.EnName == "Deleted");
+    }
 
-       // Assert
-       Assert.Equal(2, result.Count);
-       Assert.Contains(result, c => c.EnName == "Food");
-       Assert.Contains(result, c => c.EnName == "Drinks");
-   }
+    [Fact]
+    public async Task Should_Handle_Empty_Categories()
+    {
+        await Connection.ExecuteAsync("DELETE FROM categories");
+        
+        var result = await _handler.ExecuteAsync(new GetCategoryTreeQuery());
+        
+        Assert.Empty(result);
+    }
 }
