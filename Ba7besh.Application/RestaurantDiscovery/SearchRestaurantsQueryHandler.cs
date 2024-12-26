@@ -61,6 +61,7 @@ public class SearchRestaurantsQueryHandler(IDbConnection db)
                        bc.category_id,
                        c.*,
                        bt.tag,
+                       wh.business_id,
                        wh.day,
                        wh.opening_time::text as opening_time,
                        wh.closing_time::text as closing_time,
@@ -107,7 +108,7 @@ public class SearchRestaurantsQueryHandler(IDbConnection db)
                     existingRestaurant.Tags.Add(tag);
                 }
 
-                if (existingRestaurant.WorkingHours.All(wh => wh.DayOfWeek != workingHour.DayOfWeek))
+                if (existingRestaurant.WorkingHours.All(wh => wh.Day != workingHour.Day))
                 {
                     existingRestaurant.WorkingHours.Add(workingHour);
                 }
@@ -115,7 +116,7 @@ public class SearchRestaurantsQueryHandler(IDbConnection db)
                 return restaurant;
             },
             parameters,
-            splitOn: "category_id,tag,day,total_count");
+            splitOn: "category_id,tag,business_id,total_count");
 
         return new SearchRestaurantsResult
         {
