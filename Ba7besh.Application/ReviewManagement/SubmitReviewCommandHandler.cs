@@ -1,5 +1,6 @@
 using System.Data;
 using Ba7besh.Application.Exceptions;
+using Ba7besh.Application.Helpers;
 using Dapper;
 using Npgsql;
 using Paramore.Brighter;
@@ -15,7 +16,7 @@ public class SubmitReviewCommandHandler(IDbConnection db) : RequestHandlerAsync<
         if (db.State != ConnectionState.Open)
             await ((NpgsqlConnection)db).OpenAsync(cancellationToken);
         
-        await ValidateBusinessExists(command.BusinessId);
+        await BusinessHelpers.ValidateBusinessExists(db, command.BusinessId);
 
         var reviewId = Guid.NewGuid();
         using var transaction = db.BeginTransaction();
@@ -60,15 +61,5 @@ public class SubmitReviewCommandHandler(IDbConnection db) : RequestHandlerAsync<
             transaction.Rollback();
             throw;
         }
-    }
-
-    private async Task ValidateBusinessExists(string businessId)
-    {
-        var businessExists = await db.QuerySingleOrDefaultAsync<bool>(
-            "SELECT EXISTS(SELECT 1 FROM businesses WHERE id = @Id AND is_deleted = FALSE)",
-            new { Id = businessId });
-
-        if (!businessExists)
-            throw new BusinessNotFoundException(businessId);
     }
 }

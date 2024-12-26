@@ -1,4 +1,5 @@
 using System.Data;
+using Ba7besh.Application.Helpers;
 using Dapper;
 using Paramore.Darker;
 using Paramore.Darker.QueryLogging;
@@ -12,6 +13,7 @@ public class GetBusinessReviewsQueryHandler(IDbConnection db)
     public override async Task<GetBusinessReviewsResult> ExecuteAsync(GetBusinessReviewsQuery query,
         CancellationToken cancellationToken = new())
     {
+        await BusinessHelpers.ValidateBusinessExists(db, query.BusinessId);
         const string sql = """
                            WITH filtered_reviews AS (SELECT r.id,
                                                             r.user_id AS reviewer_name,
