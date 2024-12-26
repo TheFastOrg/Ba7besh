@@ -1,16 +1,19 @@
 using Asp.Versioning;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.RestaurantDiscovery;
+using Ba7besh.Application.ReviewManagement;
 using Ba7besh.Application.TagManagement;
 using Microsoft.AspNetCore.Mvc;
+using Paramore.Brighter;
 using Paramore.Darker;
 
 namespace Ba7besh.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/restaurants")]
-public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerBase
+[Route("api/v{version:apiVersion}/businesses")]
+public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandProcessor commandProcessor)
+    : ControllerBase
 {
     [HttpGet("search")]
     public async Task<ActionResult<SearchRestaurantsResult>> Search(
@@ -50,5 +53,20 @@ public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerB
         var query = new GetTagsQuery();
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPost("{businessId}/reviews")]
+    public async Task<IActionResult> SubmitReview(
+        string businessId,
+        [FromBody] SubmitReviewCommand command,
+        CancellationToken cancellationToken)
+    {
+        // TODO: Get actual user ID from auth/claims
+        var userId = "123";
+
+        command.BusinessId = businessId;
+        command.UserId = userId;
+        await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
+        return Ok();
     }
 }
