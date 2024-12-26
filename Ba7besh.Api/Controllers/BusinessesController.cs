@@ -69,4 +69,20 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
         return Ok();
     }
+
+    [HttpGet("{businessId}/reviews")]
+    public async Task<ActionResult<GetBusinessReviewsResult>> GetBusinessReviews(
+        string businessId,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] int pageNumber = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetBusinessReviewsQuery(businessId)
+        {
+            PageSize = pageSize,
+            PageNumber = pageNumber
+        };
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
 }
