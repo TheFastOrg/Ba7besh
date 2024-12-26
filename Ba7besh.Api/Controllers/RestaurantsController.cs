@@ -44,7 +44,7 @@ public class RestaurantsController(IQueryProcessor queryProcessor) : ControllerB
     }
 
     [HttpGet("tags")]
-    public async Task<ActionResult<IReadOnlyList<CategoryTreeNode>>> GetTags(
+    public async Task<ActionResult<IReadOnlyList<string>>> GetTags(
         CancellationToken cancellationToken = default)
     {
         var query = new GetTagsQuery();
