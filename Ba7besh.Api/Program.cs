@@ -25,13 +25,6 @@ builder.Services.AddSingleton<IDbConnection>(_ =>
     var dbConnectionString = builder.Configuration["DbConnectionString"];
     return new NpgsqlConnection(dbConnectionString);
 });
-builder.Services.AddSingleton<IRestaurantSearchService>(_ => 
-    new CsvRestaurantSearchService(
-        Path.Combine("Data", "business.csv"),
-        Path.Combine("Data", "category.csv"),
-        Path.Combine("Data", "business_categories.csv"),
-        Path.Combine("Data", "business_working_hours.csv"),
-        Path.Combine("Data", "business_tags.csv")));
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to

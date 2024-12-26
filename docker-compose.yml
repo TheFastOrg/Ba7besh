@@ -17,7 +17,6 @@ services:
       - DB_NAME=ba7besh
     volumes:
       - ./Ba7besh.Api/Secrets:/app/Secrets:ro
-      - ./Ba7besh.Api/Data:/app/Data:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
