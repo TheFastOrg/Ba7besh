@@ -1,6 +1,8 @@
 using System.Data;
+using Ba7besh.Api.Middlewares;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
+using Ba7besh.Application.DeviceManagement;
 using Ba7besh.Application.Exceptions;
 using Ba7besh.Application.ReviewManagement;
 using Ba7besh.Infrastructure;
@@ -22,6 +24,7 @@ builder.Services.AddSingleton<IAuthService>(_ =>
     var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
     return new FirebaseAuthService(firebaseCredentialsPath);
 });
+builder.Services.AddSingleton<SignatureValidationService>();
 DefaultTypeMap.MatchNamesWithUnderscores = true;
 builder.Services.AddSingleton<IDbConnection>(_ =>
 {
@@ -65,6 +68,7 @@ else
 {
     app.UseHttpsRedirection();
 }
+app.UseMiddleware<DeviceValidationMiddleware>();
 
 app.UseExceptionHandler(applicationBuilder => 
 {
@@ -86,6 +90,4 @@ app.UseExceptionHandler(applicationBuilder =>
 });
 
 app.MapControllers();
-app.MapGet("/", () => "Hello World! v3");
-
 app.Run();
