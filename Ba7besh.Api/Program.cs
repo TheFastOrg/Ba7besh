@@ -18,19 +18,13 @@ using Paramore.Darker.QueryLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
-
-builder.Services.AddSingleton<IAuthService>(_ =>
-{
-    var firebaseCredentialsPath = builder.Configuration["Firebase:CredentialsPath"];
-    return new FirebaseAuthService(firebaseCredentialsPath);
-});
-builder.Services.AddSingleton<SignatureValidationService>();
 DefaultTypeMap.MatchNamesWithUnderscores = true;
-builder.Services.AddSingleton<IDbConnection>(_ =>
-{
-    var dbConnectionString = builder.Configuration["DbConnectionString"];
-    return new NpgsqlConnection(dbConnectionString);
-});
+var dbConnectionString = builder.Configuration["DbConnectionString"];
+builder.Services.AddHealthChecks()
+    .AddNpgSql(dbConnectionString);
+builder.Services.AddSingleton<IAuthService>(_ => new FirebaseAuthService(builder.Configuration["Firebase:CredentialsPath"]));
+builder.Services.AddSingleton<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
+builder.Services.AddSingleton<SignatureValidationService>();
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to
@@ -68,6 +62,8 @@ else
 {
     app.UseHttpsRedirection();
 }
+app.MapHealthChecks("/health");
+
 app.UseMiddleware<DeviceValidationMiddleware>();
 
 app.UseExceptionHandler(applicationBuilder => 
