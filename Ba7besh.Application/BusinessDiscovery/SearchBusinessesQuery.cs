@@ -6,6 +6,8 @@ public record SearchBusinessesQuery : IQuery<SearchBusinessesResult>
 {
     public string? SearchTerm { get; init; }
     public string? CategoryId { get; init; }
+    public Location? CenterLocation { get; init; }
+    public double? RadiusKm { get; init; }
     public string[]? Tags { get; init; }
     public int PageSize { get; init; } = 20;
     public int PageNumber { get; init; } = 1;

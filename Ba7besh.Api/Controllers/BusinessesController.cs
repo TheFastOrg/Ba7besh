@@ -17,24 +17,11 @@ namespace Ba7besh.Api.Controllers;
 public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandProcessor commandProcessor)
     : ControllerBase
 {
-    [HttpGet("search")]
+    [HttpPost("search")]
     public async Task<ActionResult<SearchBusinessesResult>> Search(
-        [FromQuery] string? searchTerm,
-        [FromQuery] string? categoryId,
-        [FromQuery] string[]? tags,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] int pageNumber = 1,
+        [FromBody] SearchBusinessesQuery query,
         CancellationToken cancellationToken = default)
     {
-        var query = new SearchBusinessesQuery
-        {
-            SearchTerm = searchTerm,
-            CategoryId = categoryId,
-            Tags = tags,
-            PageSize = pageSize,
-            PageNumber = pageNumber
-        };
-
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }

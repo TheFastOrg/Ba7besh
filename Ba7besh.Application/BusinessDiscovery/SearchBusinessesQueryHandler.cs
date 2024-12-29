@@ -36,6 +36,21 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
             parameters.Add("Tags", query.Tags);
         }
 
+        if (query is { CenterLocation: not null, RadiusKm: not null })
+        {
+            whereClauses.Add("""
+                             ST_DWithin(
+                             location::geography,
+                             ST_MakePoint(@Longitude, @Latitude)::geography,
+                             @RadiusMeters
+                             )
+                             """);
+
+            parameters.Add("Latitude", query.CenterLocation.Latitude);
+            parameters.Add("Longitude", query.CenterLocation.Longitude);
+            parameters.Add("RadiusMeters", query.RadiusKm.Value * 1000);
+        }
+
         var whereClause = string.Join(" AND ", whereClauses);
         var sql = $"""
                    WITH filtered_businesses AS (
@@ -54,10 +69,10 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
                        b.id,
                        b.ar_name,
                        b.en_name,
-                       ST_Y(b.location::geometry) as "Location.Latitude",
-                       ST_X(b.location::geometry) as "Location.Longitude",
                        b.city,
                        b.type,
+                       ST_Y(b.location::geometry) as "Latitude",
+                       ST_X(b.location::geometry) as "Longitude",
                        bc.category_id,
                        c.*,
                        bt.tag,
@@ -81,13 +96,15 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
 
         await db.QueryAsync<
             BusinessSummary,
+            double,
+            double,
             CategoryInfo,
             string,
             WorkingHours,
             int,
             BusinessSummary>(
             sql,
-            (business, category, tag, workingHour, count) =>
+            (business, latitude, longitude, category, tag, workingHour, count) =>
             {
                 totalCount = count;
 
@@ -96,6 +113,11 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
                     businessDictionary[business.Id] = business;
                     existingBusiness = business;
                 }
+                existingBusiness.Location = new Location
+                {
+                    Latitude = latitude,
+                    Longitude = longitude
+                };
 
                 if (existingBusiness.Categories.All(c => c.Id != category.Id))
                 {
@@ -116,7 +138,7 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
                 return business;
             },
             parameters,
-            splitOn: "category_id,tag,business_id,total_count");
+            splitOn: "Latitude, Longitude,category_id,tag,business_id,total_count");
 
         return new SearchBusinessesResult
         {
