@@ -10,14 +10,6 @@ namespace Ba7besh.Api.Controllers;
 [Route("api/v{version:apiVersion}/auth")]
 public class AuthController(IAmACommandProcessor commandProcessor) : ControllerBase
 {
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
-    {
-        var command = new RegisterUserCommand(request.MobileNumber, request.Password);
-
-        await commandProcessor.SendAsync(command);
-        return Ok("User registered successfully!");
-    }
     
     [HttpPost("google")]
     public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
@@ -28,5 +20,4 @@ public class AuthController(IAmACommandProcessor commandProcessor) : ControllerB
     }
 }
 
-public record RegisterUserRequest(string MobileNumber, string Password);
 public record GoogleAuthRequest(string IdToken);

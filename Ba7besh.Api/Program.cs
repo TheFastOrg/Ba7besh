@@ -32,7 +32,7 @@ builder.Services.AddBrighter(options =>
         options.CommandProcessorLifetime = ServiceLifetime.Scoped;
         options.MapperLifetime = ServiceLifetime.Singleton;
     })
-    .AutoFromAssemblies(typeof(RegisterUserCommandHandler).Assembly);
+    .AutoFromAssemblies(typeof(GoogleAuthCommandHandler).Assembly);
 builder.Services.AddDarker(options => options.QueryProcessorLifetime = ServiceLifetime.Scoped)
     .AddHandlersFromAssemblies(typeof(SearchBusinessesQueryHandler).Assembly)
     .AddJsonQueryLogging()

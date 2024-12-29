@@ -16,35 +16,6 @@ public class FirebaseAuthService : IAuthService
         });
     }
 
-    public async Task<AuthenticationResult> RegisterWithMobileAsync(string mobileNumber, string password)
-    {
-        var userRecordArgs = new UserRecordArgs
-        {
-            PhoneNumber = mobileNumber,
-            Password = password
-        };
-
-        try
-        {
-            var userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(userRecordArgs);
-
-            return new AuthenticationResult
-            {
-                Success = true,
-                UserId = userRecord.Uid,
-                IsNewUser = true
-            };
-        }
-        catch (Exception ex)
-        {
-            return new AuthenticationResult
-            {
-                Success = false,
-                ErrorMessage = ex.Message
-            };
-        }
-    }
-
     public async Task<AuthenticationResult> AuthenticateWithGoogleAsync(string idToken)
     {
         try
