@@ -1,4 +1,5 @@
 using System.Data;
+using Ba7besh.Api.Helpers;
 using Ba7besh.Api.Middlewares;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
@@ -25,6 +26,11 @@ builder.Services.AddHealthChecks()
 builder.Services.AddSingleton<IAuthService>(_ => new FirebaseAuthService(builder.Configuration["Firebase:CredentialsPath"]));
 builder.Services.AddSingleton<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));
 builder.Services.AddSingleton<SignatureValidationService>();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(
+        AuthorizationPolicies.AdminOnly,
+        policy => policy.Requirements.Add(new RoleRequirement(UserRole.Admin))
+    );
 builder.Services.AddBrighter(options =>
     {
         //we want to use scoped, so make sure everything understands that which needs to

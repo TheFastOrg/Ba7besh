@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using Ba7besh.Api.Helpers;
 using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.ReviewManagement;
 using Ba7besh.Application.TagManagement;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Paramore.Brighter;
 using Paramore.Darker;
@@ -56,13 +58,13 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     }
 
     [HttpPost("{businessId}/reviews")]
+    [Authorize]
     public async Task<IActionResult> SubmitReview(
         string businessId,
         [FromBody] SubmitReviewCommand command,
         CancellationToken cancellationToken)
     {
-        // TODO: Get actual user ID from auth/claims
-        var userId = "123";
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId ?? throw new InvalidOperationException();
 
         command.BusinessId = businessId;
         command.UserId = userId;
