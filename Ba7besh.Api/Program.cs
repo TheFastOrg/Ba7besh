@@ -64,6 +64,7 @@ else
 }
 app.MapHealthChecks("/health");
 
+app.UseMiddleware<AuthenticationMiddleware>();
 app.UseMiddleware<DeviceValidationMiddleware>();
 
 app.UseExceptionHandler(applicationBuilder => 

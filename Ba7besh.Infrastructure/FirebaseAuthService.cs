@@ -16,6 +16,18 @@ public class FirebaseAuthService : IAuthService
         });
     }
 
+    public async Task<AuthenticatedUser> VerifyTokenAsync(string token)
+    {
+        try
+        {
+            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
+            return new AuthenticatedUser(decodedToken.Uid);
+        }
+        catch (FirebaseAuthException ex)
+        {
+            throw new UnauthorizedAccessException("Token verification failed.", ex);
+        }
+    }
     public async Task<AuthenticationResult> AuthenticateWithGoogleAsync(string idToken)
     {
         try

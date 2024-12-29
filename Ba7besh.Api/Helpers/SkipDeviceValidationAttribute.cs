@@ -1,4 +1,4 @@
-namespace Ba7besh.Api.Attributes;
+namespace Ba7besh.Api.Helpers;
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
 public sealed class SkipDeviceValidationAttribute : Attribute
