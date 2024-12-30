@@ -13,3 +13,9 @@ public record BusinessSummary
     public List<WorkingHours> WorkingHours { get; init; } = [];
     public List<string> Tags { get; init; } = [];
 }
+
+public record BusinessSummaryWithStats : BusinessSummary
+{
+    public required decimal AverageRating { get; init; }
+    public required int ReviewCount { get; init; }
+}

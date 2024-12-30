@@ -43,6 +43,21 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+    
+    [HttpGet("top-rated")]
+    public async Task<ActionResult<IReadOnlyList<BusinessSummaryWithStats>>> GetTopRatedBusinesses(
+        [FromQuery] int minimumRating = 4,
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetTopRatedBusinessesQuery 
+        { 
+            MinimumRating = minimumRating,
+            Limit = limit
+        };
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
 
     [HttpPost("{businessId}/reviews")]
     [Authorize]
