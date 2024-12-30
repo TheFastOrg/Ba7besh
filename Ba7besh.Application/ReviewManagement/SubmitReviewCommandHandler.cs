@@ -42,7 +42,7 @@ public class SubmitReviewCommandHandler(IDbConnection db) : RequestHandlerAsync<
                 var param = command.DimensionRatings.Select(r => new
                 {
                     ReviewId = reviewId,
-                    Dimension = Enum.GetName(r.Dimension)?.ToLower(),
+                    Dimension = r.Dimension.ToLowerString(),
                     r.Rating,
                     r.Note
                 });
