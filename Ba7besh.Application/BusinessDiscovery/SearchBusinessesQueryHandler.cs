@@ -35,7 +35,7 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
                 "EXISTS (SELECT 1 FROM business_tags bt WHERE bt.business_id = b.id AND bt.tag = ANY(@Tags) AND bt.is_deleted = FALSE)");
             parameters.Add("Tags", query.Tags);
         }
-
+        var distanceSelect = ", NULL AS distance_km";
         if (query is { CenterLocation: not null, RadiusKm: not null })
         {
             whereClauses.Add("""
@@ -49,12 +49,20 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
             parameters.Add("Latitude", query.CenterLocation.Latitude);
             parameters.Add("Longitude", query.CenterLocation.Longitude);
             parameters.Add("RadiusMeters", query.RadiusKm.Value * 1000);
+            distanceSelect = """
+            ,
+            ST_Distance(
+                location::geography,
+                ST_MakePoint(@Longitude, @Latitude)::geography
+            ) / 1000 as distance_km
+            """;
         }
 
         var whereClause = string.Join(" AND ", whereClauses);
         var sql = $"""
                    WITH filtered_businesses AS (
                        SELECT b.*
+                              {distanceSelect}
                        FROM businesses b
                        WHERE {whereClause}
                    ),
@@ -73,6 +81,7 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
                        b.type,
                        ST_Y(b.location::geometry) as "Latitude",
                        ST_X(b.location::geometry) as "Longitude",
+                       b.distance_km,
                        bc.category_id,
                        c.*,
                        bt.tag,
@@ -93,7 +102,62 @@ public class SearchBusinessesQueryHandler(IDbConnection db)
 
         var businessDictionary = new Dictionary<string, BusinessSummary>();
         var totalCount = 0;
+        Type[] types = [typeof(BusinessSummary),
+            typeof(double),
+            typeof(double),
+            typeof(double?),
+            typeof(CategoryInfo),
+            typeof(string),
+            typeof(WorkingHours),
+            typeof(int)];
+        await db.QueryAsync<BusinessSummary?>(sql, types, objects =>
+            {
+                if (objects is
+                    not
+                    [
+                        BusinessSummary business,
+                        double latitude,
+                        double longitude,
+                        double distanceKm,
+                        CategoryInfo category,
+                        string tag,
+                        WorkingHours workingHour,
+                        int count
+                    ]) return null;
+                totalCount = count;
 
+                if (!businessDictionary.TryGetValue(business.Id, out var existingBusiness))
+                {
+                    businessDictionary[business.Id] = business;
+                    existingBusiness = business;
+                }
+                existingBusiness.Location = new Location
+                {
+                    Latitude = latitude,
+                    Longitude = longitude
+                };
+                existingBusiness.DistanceInKm = distanceKm;
+                if (existingBusiness.Categories.All(c => c.Id != category.Id))
+                {
+                    existingBusiness.Categories.Add(category);
+                }
+
+                if (!string.IsNullOrEmpty(tag) &&
+                    !existingBusiness.Tags.Contains(tag))
+                {
+                    existingBusiness.Tags.Add(tag);
+                }
+
+                if (existingBusiness.WorkingHours.All(wh => wh.Day != workingHour.Day))
+                {
+                    existingBusiness.WorkingHours.Add(workingHour);
+                }
+
+                return business;
+
+            },
+            parameters,
+            splitOn: "Latitude, Longitude, distance_km,category_id,tag,business_id,total_count" );
         await db.QueryAsync<
             BusinessSummary,
             double,

@@ -6,6 +6,8 @@ namespace Ba7besh.Application.Tests;
 public class BusinessesSearchTests: DatabaseTestBase
 {
     private readonly SearchBusinessesQueryHandler _handler;
+    private const double DamascusLatitude = 33.5138;
+    private const double DamascusLongitude = 36.2765;
 
     public BusinessesSearchTests(PostgresContainerFixture fixture) : base(fixture)
     {
@@ -14,10 +16,10 @@ public class BusinessesSearchTests: DatabaseTestBase
 
     protected override async Task SeedTestData()
     {
-        await Connection.ExecuteAsync(@"
+        await Connection.ExecuteAsync($@"
             INSERT INTO businesses (id, ar_name, en_name, location, country, type, status, slug, is_deleted) VALUES 
-            ('b1', 'مطعم 1', 'Restaurant 1', ST_MakePoint(0, 0), 'SY', 'restaurant', 'active', 'restaurant-1', FALSE),
-            ('b2', 'مطعم 2', 'Restaurant 2', ST_MakePoint(0, 0), 'SY', 'restaurant', 'active', 'restaurant-2', FALSE),
+            ('b1', 'مطعم 1', 'Restaurant 1', ST_MakePoint({DamascusLongitude}, {DamascusLatitude}), 'SY', 'restaurant', 'active', 'restaurant-1', FALSE),
+            ('b2', 'مطعم 2', 'Restaurant 2', ST_MakePoint({DamascusLongitude + 0.018}, {DamascusLatitude}), 'SY', 'restaurant', 'active', 'restaurant-2', FALSE),
             ('b3', 'مطعم محذوف', 'Deleted Restaurant', ST_MakePoint(0, 0), 'SY', 'restaurant', 'active', 'restaurant-3', TRUE)
         ");
 
@@ -89,6 +91,45 @@ public class BusinessesSearchTests: DatabaseTestBase
         var result = await _handler.ExecuteAsync(new SearchBusinessesQuery());
 
         Assert.DoesNotContain(result.Businesses, r => r.ArName == "مطعم محذوف");
+    }
+    [Fact]
+    public async Task Should_Filter_By_Distance()
+    {
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery
+        {
+            CenterLocation = new Location
+            {
+                Latitude = DamascusLatitude,
+                Longitude = DamascusLongitude
+            },
+            RadiusKm = 1
+        });
+
+        Assert.Single(result.Businesses);
+        Assert.Contains(result.Businesses, b => b.Id == "b1");
+    }
+
+    [Fact]
+    public async Task Should_Include_Distance_In_Results()
+    {
+        var result = await _handler.ExecuteAsync(new SearchBusinessesQuery
+        {
+            CenterLocation = new Location
+            {
+                Latitude = DamascusLatitude,
+                Longitude = DamascusLongitude
+            },
+            RadiusKm = 10
+        });
+
+        var centralBusiness = result.Businesses.Single(b => b.Id == "b1");
+        var nearbyBusiness = result.Businesses.Single(b => b.Id == "b2");
+
+        Assert.NotNull(centralBusiness.DistanceInKm);
+        Assert.NotNull(nearbyBusiness.DistanceInKm);
+        
+        Assert.True(centralBusiness.DistanceInKm < 0.1);
+        Assert.InRange(nearbyBusiness.DistanceInKm!.Value, 1.6, 1.8);
     }
 
     [Fact]
