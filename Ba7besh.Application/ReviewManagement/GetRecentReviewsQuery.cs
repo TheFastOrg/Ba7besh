@@ -63,31 +63,17 @@ public class GetRecentReviewsQueryHandler(IDbConnection db)
             (review, dimension, rating, note, reactions) =>
             {
 
-                if (!reviewDict.TryGetValue(review.Id, out var existingReview))
+                if (!reviewDict.ContainsKey(review.Id))
                 {
-                    var reactionData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(reactions);
+                    var reactionSummary = ReviewHelpers.MapReactionsSummary(reactions);
                     review = review with
                     {
-                        ReactionsSummary = new ReviewReactionsSummary
-                        {
-                            HelpfulCount = reactionData?["helpful_count"] ?? 0,
-                            UnhelpfulCount = reactionData?["unhelpful_count"] ?? 0
-                        }
+                        ReactionsSummary = reactionSummary,
+                        DimensionRatings = new List<ReviewDimensionRating>()
                     };
-                    review = review with { DimensionRatings = new List<ReviewDimensionRating>() };
                     reviewDict[review.Id] = review;
-                    existingReview = review;
                 }
-
-                if (!string.IsNullOrEmpty(dimension))
-                {
-                    ((List<ReviewDimensionRating>)existingReview.DimensionRatings).Add(
-                        new ReviewDimensionRating(
-                            dimension.FromLowerString<ReviewDimension>(),
-                            rating,
-                            note));
-                }
-
+                ReviewHelpers.AddDimensionRating(reviewDict, review.Id, dimension, rating, note);
                 return review;
             },
             new
