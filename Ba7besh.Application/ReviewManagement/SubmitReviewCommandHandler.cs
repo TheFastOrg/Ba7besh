@@ -7,7 +7,7 @@ using Paramore.Brighter;
 
 namespace Ba7besh.Application.ReviewManagement;
 
-public class SubmitReviewCommandHandler(IDbConnection db) : RequestHandlerAsync<SubmitReviewCommand>
+public class SubmitReviewCommandHandler(IDbConnection db, IPhotoStorageService photoStorage) : RequestHandlerAsync<SubmitReviewCommand>
 {
     public override async Task<SubmitReviewCommand> HandleAsync(
         SubmitReviewCommand command,
@@ -51,6 +51,38 @@ public class SubmitReviewCommandHandler(IDbConnection db) : RequestHandlerAsync<
                                       VALUES (@ReviewId, @Dimension::review_dimension, @Rating, @Note)
                                       """,
                     param, transaction);
+            }
+            
+            if (command.Photos.Any())
+            {
+                foreach (var photo in command.Photos)
+                {
+                    var photoUrl = await photoStorage.UploadPhotoAsync(
+                        photo.FileName,
+                        photo.OpenReadStream(),
+                        photo.ContentType);
+
+                    await db.ExecuteAsync("""
+                                           INSERT INTO review_photos (
+                                               id, review_id, photo_url, description, 
+                                               mime_type, size_bytes, created_at
+                                           )
+                                           VALUES (
+                                               @Id, @ReviewId, @PhotoUrl, @Description,
+                                               @MimeType, @SizeBytes, @CreatedAt
+                                           )
+                                           """,
+                        new
+                        {
+                            Id = Guid.NewGuid().ToString("N"),
+                            ReviewId = reviewId.ToString(),
+                            PhotoUrl = photoUrl,
+                            photo.Description,
+                            MimeType = photo.ContentType,
+                            SizeBytes = photo.Length,
+                            CreatedAt = DateTime.UtcNow
+                        }, transaction);
+                }
             }
 
             transaction.Commit();

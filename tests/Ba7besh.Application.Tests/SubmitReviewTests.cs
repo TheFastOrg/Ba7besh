@@ -1,6 +1,7 @@
 using Ba7besh.Application.Exceptions;
 using Ba7besh.Application.ReviewManagement;
 using Dapper;
+using Moq;
 
 namespace Ba7besh.Application.Tests;
 
@@ -13,7 +14,8 @@ public class SubmitReviewTests : DatabaseTestBase
 
     public SubmitReviewTests(PostgresContainerFixture fixture) : base(fixture)
     {
-        _handler = new SubmitReviewCommandHandler(Connection);
+        Mock<IPhotoStorageService> photoStorage = new();
+        _handler = new SubmitReviewCommandHandler(Connection, photoStorage.Object);
         _validator = new SubmitReviewCommandValidator();
     }
 

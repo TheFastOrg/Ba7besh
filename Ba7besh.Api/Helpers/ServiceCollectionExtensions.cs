@@ -27,7 +27,8 @@ public static class ServiceCollectionExtensions
         
         services.AddHealthChecks()
             .AddNpgSql(dbConnectionString);
-            
+        services.Configure<PhotoStorageOptions>(configuration.GetSection("PhotoStorage"));
+        services.AddSingleton<IPhotoStorageService, AzurePhotoStorageService>();
         services.AddSingleton<IAuthService>(_ => 
             new FirebaseAuthService(configuration["Firebase:CredentialsPath"]));
         services.AddSingleton<IDbConnection>(_ => new NpgsqlConnection(dbConnectionString));

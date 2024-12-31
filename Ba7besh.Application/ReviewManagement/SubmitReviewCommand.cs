@@ -10,5 +10,6 @@ public class SubmitReviewCommand() : Command(Guid.NewGuid())
     public string UserId { get; set; } = string.Empty;
     public decimal OverallRating { get; set; }
     public string? Content { get; set; }
-    public IReadOnlyList<ReviewDimensionRating> DimensionRatings { get; set; } = Array.Empty<ReviewDimensionRating>();
+    public IReadOnlyList<ReviewDimensionRating> DimensionRatings { get; init; } = Array.Empty<ReviewDimensionRating>();
+    public IReadOnlyList<IReviewPhotoUpload> Photos { get; init; } = Array.Empty<IReviewPhotoUpload>();
 }

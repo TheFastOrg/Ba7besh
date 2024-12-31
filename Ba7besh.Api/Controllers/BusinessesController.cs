@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Ba7besh.Api.Helpers;
+using Ba7besh.Api.Models;
 using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.ReviewManagement;
@@ -78,13 +79,19 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     [Authorize]
     public async Task<IActionResult> SubmitReview(
         string businessId,
-        [FromBody] SubmitReviewCommand command,
+        [FromForm] SubmitReviewRequest request,
         CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetAuthenticatedUser()?.UserId ?? throw new InvalidOperationException();
-
-        command.BusinessId = businessId;
-        command.UserId = userId;
+        var command = new SubmitReviewCommand
+        {
+            BusinessId = businessId,
+            UserId = userId,
+            OverallRating = request.OverallRating,
+            Content = request.Content,
+            DimensionRatings = request.DimensionRatings ?? [],
+            Photos = request.Photos?.Select(p => new ReviewPhotoDto(p.File, p.Description)).ToList() ?? [], 
+        };
         await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
         return Ok();
     }
@@ -104,4 +111,18 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+}
+
+public class SubmitReviewRequest
+{
+    public decimal OverallRating { get; init; }
+    public string? Content { get; init; }
+    public ReviewDimensionRating[]? DimensionRatings { get; init; }
+    public ReviewPhotoRequest[]? Photos { get; init; }
+}
+
+public class ReviewPhotoRequest
+{
+    public required IFormFile File { get; init; }
+    public string? Description { get; init; }
 }
