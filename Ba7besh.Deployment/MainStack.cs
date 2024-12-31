@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Pulumi;
 using Pulumi.AzureNative.Authorization;
@@ -46,7 +45,10 @@ public class MainStack : Stack
                 Name = SkuName.Standard_LRS
             }
         }, new CustomResourceOptions { DependsOn = spContributorRoleAssignment });
-
+        
+        var photoStorage = new PhotoStorage(resourceGroup, storageAccount);
+        CdnEndpoint = photoStorage.CdnEndpoint;
+        
         var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
@@ -142,6 +144,7 @@ public class MainStack : Stack
     }
 
     [Output] public Output<string> Endpoint { get; set; }
+    [Output] public Output<string> CdnEndpoint { get; set; }
 
     private static Output<string> GetBlobReadSasUrl(Blob blob, StorageAccount account, BlobContainer container,
         Output<string> resourceGroupName)
