@@ -58,6 +58,21 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+    
+    [HttpGet("recommendations")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyList<BusinessSummaryWithStats>>> GetRecommendations(
+        [FromQuery] Location? location = null,
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId 
+                     ?? throw new InvalidOperationException();
+        
+        var query = new GetPersonalizedRecommendationsQuery(userId, location, limit);
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
 
     [HttpPost("{businessId}/reviews")]
     [Authorize]
