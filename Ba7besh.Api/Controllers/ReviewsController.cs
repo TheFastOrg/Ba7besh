@@ -72,6 +72,16 @@ public class ReviewsController(
         return Ok(result);
     }
     
+    [HttpGet("{reviewId}/photos")]
+    public async Task<ActionResult<IReadOnlyList<ReviewPhoto>>> GetReviewPhotos(
+        string reviewId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetReviewPhotosQuery(reviewId);
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
+    
     [HttpGet("recent")]
     public async Task<ActionResult<IReadOnlyList<RecentReviewSummary>>> GetRecentReviews(
         [FromQuery] GetRecentReviewsQuery query,
