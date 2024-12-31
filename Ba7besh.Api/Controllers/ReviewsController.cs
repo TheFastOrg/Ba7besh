@@ -42,6 +42,14 @@ public class ReviewsController(
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+    [HttpGet("recent")]
+    public async Task<ActionResult<IReadOnlyList<RecentReviewSummary>>> GetRecentReviews(
+        [FromQuery] GetRecentReviewsQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
 }
 
 public record ReactToReviewRequest(ReviewReaction Reaction);
