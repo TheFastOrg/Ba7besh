@@ -35,6 +35,7 @@ public static class ApplicationBuilderExtensions
                 var response = exception switch
                 {
                     BusinessNotFoundException ex => (StatusCode: StatusCodes.Status404NotFound, Message: ex.Message),
+                    ReviewNotFoundException ex => (StatusCode: StatusCodes.Status404NotFound, Message: ex.Message),
                     ValidationException ex => (StatusCode: StatusCodes.Status400BadRequest, Message: string.Join("; ", ex.Errors)),
                     _ => (StatusCode: StatusCodes.Status500InternalServerError, Message: "An error occurred")
                 };

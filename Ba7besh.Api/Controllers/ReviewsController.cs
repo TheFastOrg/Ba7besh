@@ -42,6 +42,36 @@ public class ReviewsController(
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+    
+    [HttpPost("{reviewId}/comments")]
+    [Authorize]
+    public async Task<IActionResult> AddComment(
+        string reviewId,
+        [FromBody] AddReviewCommentRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId ?? throw new InvalidOperationException();
+        var command = new AddReviewCommentCommand(reviewId, userId, request.Content);
+        await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
+        return Ok();
+    }
+
+    [HttpGet("{reviewId}/comments")]
+    public async Task<ActionResult<GetReviewCommentsResult>> GetComments(
+        string reviewId,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] int pageNumber = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetReviewCommentsQuery(reviewId)
+        {
+            PageSize = pageSize,
+            PageNumber = pageNumber
+        };
+        var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        return Ok(result);
+    }
+    
     [HttpGet("recent")]
     public async Task<ActionResult<IReadOnlyList<RecentReviewSummary>>> GetRecentReviews(
         [FromQuery] GetRecentReviewsQuery query,
@@ -53,3 +83,4 @@ public class ReviewsController(
 }
 
 public record ReactToReviewRequest(ReviewReaction Reaction);
+public record AddReviewCommentRequest(string Content);
