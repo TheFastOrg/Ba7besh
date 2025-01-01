@@ -94,6 +94,23 @@ public class MainStack : Stack
             },
             Location = azureLocation // Explicitly set the location
         });
+        
+        var storageAccountKeys = Output.All(resourceGroup.Name, storageAccount.Name).Apply(names =>
+        {
+            var rgName = names.First();
+            var accountName = names.Last();
+            return ListStorageAccountKeys.InvokeAsync(new ListStorageAccountKeysArgs
+            {
+                ResourceGroupName = rgName,
+                AccountName = accountName
+            });
+        });
+        var connectionString = storageAccountKeys.Apply(keys =>
+        {
+            var key = keys.Keys[0].Value;
+            return Output.Format($"DefaultEndpointsProtocol=https;AccountName={storageAccount.Name};AccountKey={key};EndpointSuffix=core.windows.net");
+        });
+        
         var firebaseCredentialsPath = config.Require("firebaseCredentialsPath");
         var dbConnectionString = config.Require("dbConnectionString");
         var appService = new WebApp("ba7besh-app", new WebAppArgs
@@ -126,6 +143,21 @@ public class MainStack : Stack
                     {
                         Name = "DbConnectionString",
                         Value = dbConnectionString
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "PhotoStorage__ConnectionString", 
+                        Value = connectionString
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "PhotoStorage__ContainerName",
+                        Value = photoStorage.PhotosContainer.Name,
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "PhotoStorage__CdnEndpoint", 
+                        Value = photoStorage.CdnEndpoint
                     }
                 }
             }
@@ -145,7 +177,6 @@ public class MainStack : Stack
 
     [Output] public Output<string> Endpoint { get; set; }
     [Output] public Output<string> CdnEndpoint { get; set; }
-
     private static Output<string> GetBlobReadSasUrl(Blob blob, StorageAccount account, BlobContainer container,
         Output<string> resourceGroupName)
     {

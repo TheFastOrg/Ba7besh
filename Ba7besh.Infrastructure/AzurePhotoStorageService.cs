@@ -9,6 +9,8 @@ public class PhotoStorageOptions
 {
     public required string ConnectionString { get; init; }
     public required string ContainerName { get; init; }
+    public string? CdnEndpoint { get; init; }
+
     public long MaxFileSizeBytes { get; init; } = 5 * 1024 * 1024; // 5MB
     public string[]? AllowedContentTypes { get; init; } = ["image/jpeg", "image/png"];
 }
@@ -36,8 +38,9 @@ public class AzurePhotoStorageService : IPhotoStorageService
         {
             HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
         });
-
-        return blobClient.Uri.ToString();
+        return !string.IsNullOrWhiteSpace(_options.CdnEndpoint) ?
+            $"{_options.CdnEndpoint}/{blobName}" :
+            blobClient.Uri.ToString();
     }
 
     public async Task DeletePhotoAsync(string photoUrl)
