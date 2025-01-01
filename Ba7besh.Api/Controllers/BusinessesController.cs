@@ -111,6 +111,34 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         var result = await queryProcessor.ExecuteAsync(query, cancellationToken);
         return Ok(result);
     }
+    
+    [HttpPost("{businessId}/follow")]
+    [Authorize]
+    public async Task<IActionResult> Follow(
+        string businessId,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId 
+                     ?? throw new InvalidOperationException();
+
+        var command = new FollowBusinessCommand(businessId, userId);
+        await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{businessId}/unfollow")]
+    [Authorize]
+    public async Task<IActionResult> Unfollow(
+        string businessId,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId 
+                     ?? throw new InvalidOperationException();
+
+        var command = new UnfollowBusinessCommand(businessId, userId);
+        await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
+        return Ok();
+    }
 }
 
 public class SubmitReviewRequest
