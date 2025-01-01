@@ -2,8 +2,10 @@ using Ba7besh.Api.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
+builder.Host.ConfigureLogging();
 
 builder.Services
+    .AddSingleton<DiagnosticContext>()
     .AddBa7beshInfrastructure(builder.Configuration)
     .AddBa7beshAuthentication()
     .AddBa7beshCQRS()
