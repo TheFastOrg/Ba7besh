@@ -50,6 +50,48 @@ public class MainStack : Stack
         var photoStorage = new PhotoStorage(resourceGroup, storageAccount);
         CdnEndpoint = photoStorage.CdnEndpoint;
         
+        var logsContainer = new BlobContainer("logs", new BlobContainerArgs
+        {
+            AccountName = storageAccount.Name,
+            ResourceGroupName = resourceGroup.Name,
+            PublicAccess = PublicAccess.None,
+            ContainerName = "logs"
+        });
+        var lifecyclePolicy = new ManagementPolicy("logsLifecycle", new ManagementPolicyArgs
+        {
+            AccountName = storageAccount.Name,
+            ResourceGroupName = resourceGroup.Name,
+            ManagementPolicyName = "logsLifecyclePolicy",
+            Policy = new ManagementPolicySchemaArgs()
+            {
+                Rules =
+                {
+                    new ManagementPolicyRuleArgs
+                    {
+                        Name = "DeleteOldLogs",
+                        Type = "Lifecycle",
+                        Definition = new ManagementPolicyDefinitionArgs
+                        {
+                            Actions = new ManagementPolicyActionArgs
+                            {
+                                BaseBlob = new ManagementPolicyBaseBlobArgs
+                                {
+                                    Delete = new DateAfterModificationArgs
+                                    {
+                                        DaysAfterModificationGreaterThan = 90
+                                    }
+                                }
+                            },
+                            Filters = new ManagementPolicyFilterArgs
+                            {
+                                PrefixMatch = { "logs/" },
+                                BlobTypes = { "blockBlob" }
+                            }
+                        }
+                    }
+                }
+            }
+        });
         var spStorageContributorRoleAssignment = new RoleAssignment("spStorageContributorRole", new RoleAssignmentArgs
         {
             PrincipalId = servicePrincipalId,
@@ -159,6 +201,16 @@ public class MainStack : Stack
                     {
                         Name = "PhotoStorage__CdnEndpoint", 
                         Value = photoStorage.CdnEndpoint
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "Storage__ConnectionString",
+                        Value = connectionString
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "Storage__ContainerName",
+                        Value = logsContainer.Name
                     }
                 }
             }
