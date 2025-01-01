@@ -61,7 +61,6 @@ public class MainStack : Stack
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
-            ManagementPolicyName = "logsLifecyclePolicy",
             Policy = new ManagementPolicySchemaArgs()
             {
                 Rules =
