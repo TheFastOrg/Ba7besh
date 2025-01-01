@@ -26,6 +26,7 @@ public class PhotoStorage
         var cdnProfile = new Profile("ba7besh-cdn", new ProfileArgs
         {
             ResourceGroupName = resourceGroup.Name,
+            ProfileName = "ba7besh-cdn",
             Location = resourceGroup.Location,
             Sku = new SkuArgs { Name = Pulumi.AzureNative.Cdn.SkuName.Standard_Microsoft}
         });
@@ -33,6 +34,7 @@ public class PhotoStorage
         var endpoint = new Endpoint("photos", new EndpointArgs
         {
             ProfileName = cdnProfile.Name,
+            EndpointName = "ba7besh-cdn-endpoint",
             ResourceGroupName = resourceGroup.Name,
             Location = resourceGroup.Location,
             IsHttpAllowed = false,
