@@ -139,6 +139,28 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
         await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
         return Ok();
     }
+    
+    [HttpPost("suggest")]
+    [Authorize]
+    public async Task<IActionResult> SuggestBusiness(
+        [FromBody] SuggestBusinessRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = HttpContext.GetAuthenticatedUser()?.UserId 
+                     ?? throw new InvalidOperationException();
+
+        var command = new SuggestBusinessCommand
+        {
+            UserId = userId,
+            ArName = request.ArName,
+            EnName = request.EnName,
+            Location = request.Location,
+            Description = request.Description
+        };
+
+        await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
+        return Ok();
+    }
 }
 
 public class SubmitReviewRequest
@@ -154,4 +176,12 @@ public class ReviewPhotoRequest
     public string FileBase64 { get; init; } = string.Empty;
     public string? FileName { get; init; }
     public string? Description { get; init; }
+}
+
+public record SuggestBusinessRequest
+{
+    public required string ArName { get; init; }
+    public required string EnName { get; init; }
+    public required Location Location { get; init; }
+    public required string Description { get; init; }
 }
