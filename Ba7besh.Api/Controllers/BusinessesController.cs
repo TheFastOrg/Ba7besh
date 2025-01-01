@@ -79,7 +79,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     [Authorize]
     public async Task<IActionResult> SubmitReview(
         string businessId,
-        [FromForm] SubmitReviewRequest request,
+        [FromBody] SubmitReviewRequest request,
         CancellationToken cancellationToken)
     {
         var userId = HttpContext.GetAuthenticatedUser()?.UserId ?? throw new InvalidOperationException();
