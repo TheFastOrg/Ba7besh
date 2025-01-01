@@ -42,12 +42,25 @@ public static class ReviewHelpers
     {
         if (string.IsNullOrEmpty(dimension) || rating == null || !reviewDict.TryGetValue(reviewId, out var review))
             return;
-
+        
+        if (review.DimensionRatings.Any(reviewDimensionRating =>
+                reviewDimensionRating.Dimension.ToLowerString() == dimension))
+            return;
+        
         var dimensionRating = new ReviewDimensionRating(
             dimension.FromLowerString<ReviewDimension>(),
             rating.Value,
             note);
-        
         ((List<ReviewDimensionRating>)review.DimensionRatings).Add(dimensionRating);
+    }
+
+    public static void AddReviewPhoto<TReview>(TReview review, ReviewPhoto? photo) where TReview : ReviewSummary
+    {
+        if (photo is null || review.Photos.Any(reviewPhoto => reviewPhoto.Id == photo.Id))
+        {
+            return;
+        }
+
+        ((List<ReviewPhoto>)review.Photos).Add(photo);
     }
 }

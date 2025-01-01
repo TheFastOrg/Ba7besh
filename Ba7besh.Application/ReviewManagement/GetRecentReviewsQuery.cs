@@ -33,6 +33,12 @@ public class GetRecentReviewsQueryHandler(IDbConnection db)
                 rr.dimension::text,
                 rr.rating,
                 rr.note,
+                rp.id,
+                rp.review_id,
+                rp.photo_url,
+                rp.description,
+                rp.mime_type,
+                rp.size_bytes,
                 (
                     SELECT json_build_object(
                         'helpful_count', COALESCE(COUNT(*) FILTER (WHERE reaction = 'helpful'), 0),
@@ -44,6 +50,7 @@ public class GetRecentReviewsQueryHandler(IDbConnection db)
             FROM reviews r
             JOIN businesses b ON r.business_id = b.id AND b.is_deleted = FALSE
             LEFT JOIN review_ratings rr ON r.id = rr.review_id
+            LEFT JOIN review_photos rp ON r.id = rp.review_id AND rp.is_deleted = FALSE
             WHERE r.is_deleted = FALSE 
             AND r.status = 'approved'
             ORDER BY r.created_at DESC
@@ -57,13 +64,13 @@ public class GetRecentReviewsQueryHandler(IDbConnection db)
             string,
             decimal,
             string,
+            ReviewPhoto?,
             string,
             RecentReviewSummary>(
             sql,
-            (review, dimension, rating, note, reactions) =>
+            (review, dimension, rating, note, photo, reactions) =>
             {
-
-                if (!reviewDict.ContainsKey(review.Id))
+                if (!reviewDict.TryGetValue(review.Id, out var existingReview))
                 {
                     var reactionSummary = ReviewHelpers.MapReactionsSummary(reactions);
                     review = review with
@@ -72,15 +79,17 @@ public class GetRecentReviewsQueryHandler(IDbConnection db)
                         DimensionRatings = new List<ReviewDimensionRating>()
                     };
                     reviewDict[review.Id] = review;
+                    existingReview = review;
                 }
                 ReviewHelpers.AddDimensionRating(reviewDict, review.Id, dimension, rating, note);
+                ReviewHelpers.AddReviewPhoto(existingReview, photo);
                 return review;
             },
             new
             {
                query.Limit
             },
-            splitOn: "dimension,rating,note,reactions");
+            splitOn: "dimension,rating,note,id,reactions");
 
         return reviewDict.Values.ToList();
     }

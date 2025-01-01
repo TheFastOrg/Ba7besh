@@ -7,6 +7,8 @@ public record ReviewSummary
     public string? Content { get; set; }
     public required IReadOnlyList<ReviewDimensionRating> DimensionRatings { get; init; }
     public required ReviewReactionsSummary ReactionsSummary { get; init; }
+    public IReadOnlyList<ReviewPhoto> Photos { get; init; } = Array.Empty<ReviewPhoto>();
+
 }
 
 public record RecentReviewSummary : ReviewSummary
