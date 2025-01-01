@@ -19,7 +19,7 @@ public class PhotoStorage
         {
             AccountName = storageAccount.Name,
             ResourceGroupName = resourceGroup.Name,
-            PublicAccess = PublicAccess.None,
+            PublicAccess = PublicAccess.Blob,
             ContainerName = "photos"
         });
 

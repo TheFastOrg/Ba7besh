@@ -43,7 +43,8 @@ public class MainStack : Stack
             Sku = new SkuArgs
             {
                 Name = SkuName.Standard_LRS
-            }
+            },
+            AllowBlobPublicAccess = true,
         }, new CustomResourceOptions { DependsOn = spContributorRoleAssignment });
         
         var photoStorage = new PhotoStorage(resourceGroup, storageAccount);

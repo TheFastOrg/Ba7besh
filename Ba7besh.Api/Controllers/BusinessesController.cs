@@ -90,7 +90,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
             OverallRating = request.OverallRating,
             Content = request.Content,
             DimensionRatings = request.DimensionRatings ?? [],
-            Photos = request.Photos?.Select(p => new ReviewPhotoDto(p.File, p.Description)).ToList() ?? [], 
+            Photos = request.Photos?.Select(p => new ReviewPhotoDto(p.FileBase64, p.FileName, p.Description)).ToList() ?? [], 
         };
         await commandProcessor.SendAsync(command, cancellationToken: cancellationToken);
         return Ok();
@@ -123,6 +123,7 @@ public class SubmitReviewRequest
 
 public class ReviewPhotoRequest
 {
-    public required IFormFile File { get; init; }
+    public string FileBase64 { get; init; } = string.Empty;
+    public string? FileName { get; init; }
     public string? Description { get; init; }
 }

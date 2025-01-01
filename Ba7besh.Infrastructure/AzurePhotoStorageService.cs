@@ -39,7 +39,7 @@ public class AzurePhotoStorageService : IPhotoStorageService
             HttpHeaders = new BlobHttpHeaders { ContentType = contentType }
         });
         return !string.IsNullOrWhiteSpace(_options.CdnEndpoint) ?
-            $"{_options.CdnEndpoint}/{blobName}" :
+            $"{_options.CdnEndpoint}/{_options.ContainerName}/{blobName}" :
             blobClient.Uri.ToString();
     }
 
