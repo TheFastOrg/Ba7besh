@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:224143751802:android:d4a71cc845836f37dd19c3",
+        "mobilesdk_app_id": "1:224143751802:android:73aa5ebc74009812dd19c3",
         "android_client_info": {
-          "package_name": "com.example.mobile"
+          "package_name": "com.ba7besh.app"
         }
       },
       "oauth_client": [
