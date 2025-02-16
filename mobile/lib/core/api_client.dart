@@ -8,16 +8,28 @@ import '../device/registration_result.dart';
 class ApiException implements Exception {
   final String message;
   final int statusCode;
+  final dynamic details;
 
-  ApiException(this.message, this.statusCode);
+  ApiException(this.message, this.statusCode, [this.details]);
 
   factory ApiException.fromResponse(http.Response response) {
-    final body = jsonDecode(response.body);
-    return ApiException(
-      body['error'] ?? 'Unknown error',
-      response.statusCode,
-    );
+    try {
+      final body = jsonDecode(response.body);
+      return ApiException(
+        body['error'] ?? 'Unknown error',
+        response.statusCode,
+        body['details'],
+      );
+    } catch (e) {
+      return ApiException(
+        'Failed to parse error response',
+        response.statusCode,
+      );
+    }
   }
+
+  @override
+  String toString() => 'ApiException: $message (Status: $statusCode)';
 }
 
 class ApiClient {
