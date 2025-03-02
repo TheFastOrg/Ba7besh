@@ -1,29 +1,29 @@
 class OnboardingPage {
   final String title;
   final String description;
-  final String image;
+  final String animation;
 
   const OnboardingPage({
     required this.title,
     required this.description,
-    required this.image,
+    required this.animation,
   });
 
   static const List<OnboardingPage> pages = [
     OnboardingPage(
       title: 'Discover Local Gems',
       description: 'Find and explore trusted local restaurants in your area',
-      image: 'assets/images/discover.png',
+      animation: 'assets/animations/discover.json',
     ),
     OnboardingPage(
       title: 'Real Reviews',
       description: 'Get authentic reviews and photos from food lovers like you',
-      image: 'assets/images/reviews.png',
+      animation: 'assets/animations/reviews.json',
     ),
     OnboardingPage(
       title: 'Join the Community',
       description: 'Share your experiences and help others discover great food',
-      image: 'assets/images/community.png',
+      animation: 'assets/animations/community.json',
     ),
   ];
 }
