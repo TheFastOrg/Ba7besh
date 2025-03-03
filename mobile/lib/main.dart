@@ -1,3 +1,4 @@
+import 'package:firebase_phone_auth_handler/firebase_phone_auth_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +33,7 @@ class Ba7beshApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return FirebasePhoneAuthProvider(child: MaterialApp(
       title: 'Ba7besh',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -58,6 +59,6 @@ class Ba7beshApp extends StatelessWidget {
         ),
       ),
       home: const LoadingScreen(),
-    );
+    ),);
   }
 }

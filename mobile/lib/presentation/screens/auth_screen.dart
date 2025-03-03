@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mobile/auth/auth_provider.dart';
 import 'package:mobile/presentation/screens/home_screen.dart';
+import 'package:mobile/presentation/screens/phone_auth_screen.dart';
 import 'package:mobile/presentation/widgets/social_auth_button.dart';
 
 class AuthScreen extends ConsumerWidget {
@@ -72,6 +73,20 @@ class AuthScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 24),
                   ],
+
+                  // Phone Sign-in button
+                  SocialAuthButton(
+                    icon: Icons.phone,
+                    label: 'Continue with Phone',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
 
                   // Google Sign-in button
                   SocialAuthButton(

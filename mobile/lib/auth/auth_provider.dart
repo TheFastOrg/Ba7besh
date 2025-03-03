@@ -53,6 +53,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
     });
   }
 
+  // For phone authentication
+  Future<void> startPhoneAuth(String phoneNumber) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    // The actual verification is handled by firebase_phone_auth_handler
+    state = state.copyWith(isLoading: false);
+  }
+
+  Future<void> completePhoneAuth(UserCredential credential) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    final result = await _authService.signInWithPhone(credential);
+
+    state = state.copyWith(
+      user: result.user,
+      isLoading: false,
+      errorMessage: result.success ? null : result.errorMessage,
+    );
+  }
+
+  void setAuthError(String message) {
+    state = state.copyWith(errorMessage: message, isLoading: false);
+  }
+
   Future<void> signInWithGoogle() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 

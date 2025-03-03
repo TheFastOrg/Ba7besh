@@ -18,6 +18,14 @@ public class AuthController(IAmACommandProcessor commandProcessor) : ControllerB
         await commandProcessor.SendAsync(command);
         return Ok("Authentication via google was successful!");
     }
+    [HttpPost("phone")]
+    public async Task<IActionResult> PhoneAuth([FromBody] PhoneAuthRequest request)
+    {
+        var command = new PhoneAuthCommand(request.IdToken);
+        await commandProcessor.SendAsync(command);
+        return Ok("Authentication via phone was successful!");
+    }
 }
 
 public record GoogleAuthRequest(string IdToken);
+public record PhoneAuthRequest(string IdToken);

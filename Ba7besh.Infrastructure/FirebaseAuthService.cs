@@ -67,6 +67,48 @@ public class FirebaseAuthService : IAuthService
             };
         }
     }
+    public async Task<AuthenticationResult> AuthenticateWithPhoneAsync(string idToken)
+    {
+        try
+        {
+            var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(idToken);
+            var uid = decodedToken.Uid;
+            var phoneNumber = decodedToken.Claims.TryGetValue("phone_number", out var phone) 
+                ? phone.ToString() 
+                : null;
+
+            var existingUser = await GetUserAsync(uid);
+            if (existingUser != null)
+            {
+                var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
+                return new AuthenticationResult
+                {
+                    Success = true,
+                    UserId = existingUser.Uid,
+                    Token = customToken,
+                    IsNewUser = false
+                };
+            }
+
+            var newUser = await CreateNewUserAsync(uid, decodedToken.Claims);
+            var newCustomToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(newUser.Uid);
+            return new AuthenticationResult
+            {
+                Success = true,
+                UserId = newUser.Uid,
+                Token = newCustomToken,
+                IsNewUser = true
+            };
+        }
+        catch (FirebaseAuthException ex)
+        {
+            return new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
 
     private static async Task<UserRecord?> GetUserAsync(string uid)
     {

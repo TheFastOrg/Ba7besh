@@ -42,6 +42,42 @@ class AuthService {
     await _storage.write(key: _userIdKey, value: user.uid);
   }
 
+  // Phone Authentication method
+  Future<AuthResult> signInWithPhone(UserCredential credential) async {
+    try {
+      final user = credential.user;
+      if (user == null) {
+        return AuthResult(
+          success: false,
+          errorMessage: 'Failed to sign in with phone number',
+        );
+      }
+
+      // Register with backend
+      final idToken = await user.getIdToken();
+      if (idToken != null) {
+        try {
+          await _api.post('/auth/phone', body: {'idToken': idToken});
+          await _persistUserData(user);
+        } catch (e) {
+          // If backend registration fails, we still have a Firebase user
+          return AuthResult(
+            success: true,
+            user: user,
+            errorMessage: 'Authenticated but failed to register with server: ${e.toString()}',
+          );
+        }
+      }
+
+      return AuthResult(success: true, user: user);
+    } catch (e) {
+      return AuthResult(
+        success: false,
+        errorMessage: 'Authentication error: ${e.toString()}',
+      );
+    }
+  }
+
   Future<AuthResult> signInWithGoogle() async {
     try {
       // Start the Google sign-in process
