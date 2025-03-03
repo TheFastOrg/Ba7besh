@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "224143751802-68iv86amlf3c4corleuef4uiu2ao0933.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ba7besh.app",
+            "certificate_hash": "eb638a101fecc27fa2e8e954a97d7ea7eb77ff48"
+          }
+        },
+        {
           "client_id": "224143751802-u3hktq1cqaad1n4nt2a8djghhkbshpj0.apps.googleusercontent.com",
           "client_type": 3
         }

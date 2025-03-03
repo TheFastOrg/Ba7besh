@@ -10,70 +10,103 @@ class AuthScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(authProvider, (previous, next) {
-      next.whenOrNull(
-        data: (user) {
-          if (user != null) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const HomeScreen()),
-            );
-          }
-        },
-        error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Authentication failed: $error')),
-          );
-        },
-      );
-    });
-
     final authState = ref.watch(authProvider);
 
+    // Navigate to home screen when user is authenticated
+    ref.listen(authProvider, (previous, next) {
+      if (next.user != null && !next.isLoading) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
+    });
+
     return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Lottie.asset(
-                  'assets/animations/welcome.json',
-                  height: 200,
-                ),
-                const SizedBox(height: 48),
-                Text(
-                  'Welcome to Ba7besh',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Discover and share your favorite local restaurants',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-                SocialAuthButton(
-                  icon: Icons.g_mobiledata,
-                  label: 'Continue with Google',
-                  onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
-                ),
-              ],
-            ),
-          ),
-          if (authState.isLoading)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Lottie.asset(
-                  'assets/animations/loading.json',
-                  width: 200,
-                  height: 200,
-                ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // App logo or welcome animation
+                  Lottie.asset(
+                    'assets/animations/welcome.json',
+                    height: 200,
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Title
+                  Text(
+                    'Welcome to Ba7besh',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Subtitle
+                  Text(
+                    'Discover and share your favorite local restaurants in Syria',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Error message (if any)
+                  if (authState.errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Text(
+                        authState.errorMessage!,
+                        style: TextStyle(color: Colors.red.shade800),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Google Sign-in button
+                  SocialAuthButton(
+                    icon: Icons.g_mobiledata,
+                    label: 'Continue with Google',
+                    onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Additional option if needed
+                  TextButton(
+                    onPressed: () {
+                      // Skip for now or continue as guest feature could be implemented here
+                    },
+                    child: const Text('Skip for now'),
+                  ),
+                ],
               ),
             ),
-        ],
+
+            // Loading overlay
+            if (authState.isLoading)
+              Container(
+                color: Colors.black45,
+                child: Center(
+                  child: Lottie.asset(
+                    'assets/animations/loading.json',
+                    width: 200,
+                    height: 200,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

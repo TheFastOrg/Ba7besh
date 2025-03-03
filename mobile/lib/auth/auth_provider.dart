@@ -1,54 +1,76 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:mobile/core/api_client.dart';
+import 'package:mobile/auth/auth_service.dart';
 import 'package:mobile/core/api_provider.dart';
 
-final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+class AuthState {
+  final User? user;
+  final bool isLoading;
+  final String? errorMessage;
+
+  AuthState({
+    this.user,
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  AuthState copyWith({
+    User? user,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return AuthState(
+      user: user ?? this.user,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
+    );
+  }
+}
+
+final authServiceProvider = Provider<AuthService>((ref) {
   final api = ref.watch(apiClientProvider);
-  return AuthNotifier(FirebaseAuth.instance, api);
+  return AuthService(api);
 });
 
-class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
-  final FirebaseAuth _auth;
-  final ApiClient _api;
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final authService = ref.watch(authServiceProvider);
+  return AuthNotifier(authService);
+});
 
-  AuthNotifier(this._auth, this._api) : super(const AsyncValue.data(null)) {
-    _auth.authStateChanges().listen((user) {
-      state = AsyncValue.data(user);
+class AuthNotifier extends StateNotifier<AuthState> {
+  final AuthService _authService;
+
+  AuthNotifier(this._authService) : super(AuthState()) {
+    _init();
+  }
+
+  void _init() {
+    _authService.authStateChanges.listen((user) {
+      state = state.copyWith(
+        user: user,
+        isLoading: false,
+      );
     });
   }
 
   Future<void> signInWithGoogle() async {
-    try {
-      state = const AsyncValue.loading();
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        state = const AsyncValue.data(null);
-        return;
-      }
+    state = state.copyWith(isLoading: true, errorMessage: null);
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    final result = await _authService.signInWithGoogle();
 
-      final userCredential = await _auth.signInWithCredential(credential);
-      final idToken = await userCredential.user?.getIdToken();
-
-      if (idToken != null) {
-        await _api.post('/auth/google', body: {'idToken': idToken});
-      }
-
-      state = AsyncValue.data(userCredential.user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+    state = state.copyWith(
+      user: result.user,
+      isLoading: false,
+      errorMessage: result.success ? null : result.errorMessage,
+    );
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
-    state = const AsyncValue.data(null);
+    state = state.copyWith(isLoading: true);
+    await _authService.signOut();
+    state = state.copyWith(
+      user: null,
+      isLoading: false,
+    );
   }
 }
