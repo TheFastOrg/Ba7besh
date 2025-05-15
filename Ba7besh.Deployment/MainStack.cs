@@ -188,7 +188,6 @@ public class MainStack : Stack
             }
         });
         
-        
         // Upload the API `.zip` file to the blob container
         var botZipPath = config.Require("ba7beshBotZipPath");
         var botZipFileName = botZipPath.Split("/").Last();
