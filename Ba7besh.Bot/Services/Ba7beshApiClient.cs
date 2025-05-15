@@ -8,6 +8,7 @@ namespace Ba7besh.Bot.Services;
 
 public class Ba7beshApiClient : IBa7beshApiClient
 {
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<Ba7beshApiClient> _logger;
     
@@ -18,17 +19,23 @@ public class Ba7beshApiClient : IBa7beshApiClient
         
         // Get API token from configuration
         var apiToken = configuration["Api:AuthToken"];
+        var baseUrl = configuration["Api:BaseUrl"];
         
-        // Make sure we log if the token is missing (but don't log the actual token)
+        _logger.LogInformation("API Configuration: BaseUrl={BaseUrl}", baseUrl);
+        
         if (string.IsNullOrEmpty(apiToken))
         {
-            _logger.LogWarning("API authentication token is missing or empty");
+            _logger.LogError("API authentication token is missing or empty");
         }
         else
         {
-            // Add the token to the default request headers
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
-            _logger.LogInformation("API authentication token was successfully configured");
+            // Use both authentication methods for maximum compatibility
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
+            
+            _httpClient.DefaultRequestHeaders.Add("X-Bot-Api-Key", apiToken);
+            
+            _logger.LogInformation("API token configured and added to request headers");
         }
     }
     
@@ -36,9 +43,23 @@ public class Ba7beshApiClient : IBa7beshApiClient
     {
         try
         {
+            // Log the JSON being sent
+            var json = System.Text.Json.JsonSerializer.Serialize(query);
+            _logger.LogInformation("Sending search query: {Json}", json);
+            
             var response = await _httpClient.PostAsJsonAsync("businesses/search", query, cancellationToken);
+            
+            // Enhanced error logging
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("API request failed: Status={Status}, Error={Error}", 
+                    response.StatusCode, 
+                    string.IsNullOrEmpty(errorContent) ? "(no content)" : errorContent);
+            }
+            
             response.EnsureSuccessStatusCode();
-        
+            
             return await response.Content.ReadFromJsonAsync<SearchBusinessesResult>(cancellationToken) 
                    ?? new SearchBusinessesResult();
         }
