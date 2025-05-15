@@ -8,25 +8,30 @@ namespace Ba7besh.Bot.Services;
 
 public class Ba7beshApiClient : IBa7beshApiClient
 {
-    private readonly string _apiToken;
     private readonly HttpClient _httpClient;
     private readonly ILogger<Ba7beshApiClient> _logger;
     
-    // Add a constructor to get the API token from configuration
     public Ba7beshApiClient(HttpClient httpClient, ILogger<Ba7beshApiClient> logger, IConfiguration configuration)
     {
-        this._httpClient = httpClient;
-        this._logger = logger;
+        _httpClient = httpClient;
+        _logger = logger;
         
-        // Get API token from configuration (this will be set in the docker container)
-        _apiToken = configuration["Api:AuthToken"] ?? string.Empty;
+        // Get API token from configuration
+        var apiToken = configuration["Api:AuthToken"];
         
-        // Add the token to the default request headers
-        if (!string.IsNullOrEmpty(_apiToken))
+        // Make sure we log if the token is missing (but don't log the actual token)
+        if (string.IsNullOrEmpty(apiToken))
         {
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiToken);
+            _logger.LogWarning("API authentication token is missing or empty");
+        }
+        else
+        {
+            // Add the token to the default request headers
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
+            _logger.LogInformation("API authentication token was successfully configured");
         }
     }
+    
     public async Task<SearchBusinessesResult> SearchBusinessesAsync(SearchBusinessesQuery query, CancellationToken cancellationToken = default)
     {
         try
