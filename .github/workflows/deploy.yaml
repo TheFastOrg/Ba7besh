@@ -62,6 +62,15 @@ jobs:
           cd output
           zip -r ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip .
           cd ..
+          
+      - name: Build and Publish Bot
+        run: dotnet publish Ba7besh.Bot -c Release -o ./bot-output
+    
+      - name: Create Bot Versioned Zip
+        run: |
+          cd bot-output
+          zip -r ../Ba7beshBot-${{ env.COMBINED_VERSION }}.zip .
+          cd ..
         
       # Set up Pulumi
       - name: Setup Pulumi
@@ -83,7 +92,10 @@ jobs:
           pulumi stack select dev
           echo "" > Pulumi.dev.yaml
           pulumi config set ba7besh:ba7beshZipPath ../Ba7beshApi-${{ env.COMBINED_VERSION }}.zip
+          pulumi config set ba7besh:ba7beshBotZipPath ../Ba7beshBot-${{ env.COMBINED_VERSION }}.zip
           pulumi config set ba7besh:firebaseCredentialsPath ${{ env.FIREBASE_CREDENTIALS_PATH }}
           pulumi config set ba7besh:servicePrincipalId ${{ secrets.AZURE_CLIENT_ID }}
           pulumi config set --secret ba7besh:dbConnectionString "${{ secrets.DB_CONNECTION_STRING }}"
+          pulumi config set --secret ba7besh:botToken "${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          pulumi config set --secret ba7besh:botApiToken "${{ secrets.BOT_API_TOKEN }}"
           pulumi up --stack dev --yes

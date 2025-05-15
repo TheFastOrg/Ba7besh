@@ -177,6 +177,51 @@ public class MainStack : Stack
                     {
                         Name = "Storage__ContainerName",
                         Value = logsContainer.Name
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "BotApi__AuthToken", 
+                        Value = config.Require("botApiToken")
+                    }
+                }
+            }
+        });
+        
+        var botService = new WebApp("ba7besh-bot", new WebAppArgs
+        {
+            ResourceGroupName = resourceGroup.Name,
+            Name = "ba7besh-bot",
+            Identity = new ManagedServiceIdentityArgs
+            {
+                Type = ManagedServiceIdentityType.SystemAssigned
+            },
+            ServerFarmId = appServicePlan.Id,
+            Location = azureLocation,
+            SiteConfig = new SiteConfigArgs
+            {
+                Http20Enabled = true,
+                LinuxFxVersion = "DOTNETCORE|8.0",
+                AppSettings = new[]
+                {
+                    new NameValuePairArgs
+                    {
+                        Name = "BotConfiguration__BotToken",
+                        Value = config.Require("botToken") 
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "Api__BaseUrl",
+                        Value = $"https://{appService.DefaultHostName}/api/v1"
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "Api__AuthToken", 
+                        Value = config.Require("botApiToken") 
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "ASPNETCORE_ENVIRONMENT",
+                        Value = "Production"
                     }
                 }
             }
@@ -192,9 +237,11 @@ public class MainStack : Stack
             PrincipalType = PrincipalType.ServicePrincipal
         });
         Endpoint = appService.DefaultHostName.Apply(hostname => $"https://{hostname}");
+        BotEndpoint = botService.DefaultHostName.Apply(hostname => $"https://{hostname}");
     }
 
     [Output] public Output<string> Endpoint { get; set; }
+    [Output] public Output<string> BotEndpoint { get; set; }
     [Output] public Output<string> CdnEndpoint { get; set; }
     private static Output<string> GetBlobReadSasUrl(Blob blob, StorageAccount account, BlobContainer container,
         Output<string> resourceGroupName)

@@ -17,4 +17,11 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app
 COPY --from=build /app/Ba7besh.Bot/out ./
+
+# Set environment variables with defaults, these can be overridden at runtime
+ENV BotConfiguration__BotToken="YOUR_BOT_TOKEN" \
+    Api__BaseUrl="http://api:8080/api/v1" \
+    Api__AuthToken="" \
+    ASPNETCORE_ENVIRONMENT="Production"
+
 ENTRYPOINT ["dotnet", "Ba7besh.Bot.dll"]

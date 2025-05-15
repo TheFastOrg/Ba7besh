@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using Ba7besh.Api.Authentication;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.DeviceManagement;
@@ -8,6 +9,7 @@ using Ba7besh.Infrastructure;
 using Dapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Npgsql;
 using Paramore.Brighter.Extensions.DependencyInjection;
@@ -39,7 +41,11 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddBa7beshAuthentication(this IServiceCollection services)
     {
-        services.AddAuthentication()
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 options.Events = new JwtBearerEvents
@@ -63,12 +69,17 @@ public static class ServiceCollectionExtensions
                         }
                     }
                 };
-            });
+            })
+            .AddScheme<AuthenticationSchemeOptions, BotAuthenticationHandler>("BotAuth", null);
+            
 
         services.AddAuthorizationBuilder()
             .AddPolicy(
                 AuthorizationPolicies.AdminOnly,
                 policy => policy.Requirements.Add(new RoleRequirement(UserRole.Admin))
+            ).AddPolicy(
+                AuthorizationPolicies.BotService,
+                policy => policy.RequireRole("BotService")
             );
             
         return services;

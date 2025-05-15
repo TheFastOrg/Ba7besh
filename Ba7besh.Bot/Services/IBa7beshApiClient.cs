@@ -5,7 +5,14 @@ namespace Ba7besh.Bot.Services;
 
 public interface IBa7beshApiClient
 {
-    Task<SearchBusinessesResult> SearchBusinessesAsync(string searchTerm, CancellationToken cancellationToken = default);
+    Task<SearchBusinessesResult> SearchBusinessesAsync(
+        SearchBusinessesQuery query,
+        CancellationToken cancellationToken = default);
+
     Task<bool> SubmitReviewAsync(SubmitReviewCommand review, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<BusinessSummaryWithStats>> GetTopRatedBusinessesAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<BusinessSummaryWithStats>> GetTopRatedBusinessesAsync(
+        CancellationToken cancellationToken = default);
+    Task<BusinessSummary?> FindBusinessByNameAsync(string businessName, CancellationToken cancellationToken = default);
+
 }

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Ba7besh.Api.Helpers;
 using Ba7besh.Api.Models;
+using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.CategoryManagement;
 using Ba7besh.Application.ReviewManagement;
@@ -19,6 +20,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     : ControllerBase
 {
     [HttpPost("search")]
+    [AllowAnonymous]
     public async Task<ActionResult<SearchBusinessesResult>> Search(
         [FromBody] SearchBusinessesQuery query,
         CancellationToken cancellationToken = default)
@@ -46,6 +48,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     }
     
     [HttpGet("top-rated")]
+    [AllowAnonymous]
     public async Task<ActionResult<IReadOnlyList<BusinessSummaryWithStats>>> GetTopRatedBusinesses(
         [FromQuery] int minimumRating = 4,
         [FromQuery] int limit = 10,
@@ -76,7 +79,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     }
 
     [HttpPost("{businessId}/reviews")]
-    [Authorize]
+    [Authorize(Policy = AuthorizationPolicies.BotService)]
     public async Task<IActionResult> SubmitReview(
         string businessId,
         [FromBody] SubmitReviewRequest request,

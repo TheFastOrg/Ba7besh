@@ -10,10 +10,46 @@ namespace Ba7besh.Bot.Services;
 public class Ba7beshDirectApiClient(Ba7beshDbContext dbContext, ILogger<Ba7beshDirectApiClient> logger)
     : IBa7beshApiClient
 {
-    public async Task<SearchBusinessesResult> SearchBusinessesAsync(string searchTerm, CancellationToken cancellationToken = default)
+    public async Task<SearchBusinessesResult> SearchBusinessesAsync(SearchBusinessesQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
+            var parameters = new DynamicParameters();
+            var whereConditions = new List<string> { "b.is_deleted = FALSE" };
+        
+            if (!string.IsNullOrEmpty(query.SearchTerm))
+            {
+                whereConditions.Add("(b.ar_name ILIKE @SearchTerm OR b.en_name ILIKE @SearchTerm)");
+                parameters.Add("SearchTerm", $"%{query.SearchTerm}%");
+            }
+        
+            var locationCondition = "";
+            var distanceSelect = ", NULL AS distance_km";
+        
+            if (query.CenterLocation != null && query.RadiusKm.HasValue)
+            {
+                whereConditions.Add(@"
+                ST_DWithin(
+                    location::geography,
+                    ST_MakePoint(@Longitude, @Latitude)::geography,
+                    @RadiusMeters
+                )
+            ");
+            
+                parameters.Add("Latitude", query.CenterLocation.Latitude);
+                parameters.Add("Longitude", query.CenterLocation.Longitude);
+                parameters.Add("RadiusMeters", query.RadiusKm.Value * 1000);
+            
+                distanceSelect = @"
+                , ST_Distance(
+                    location::geography,
+                    ST_MakePoint(@Longitude, @Latitude)::geography
+                ) / 1000 as distance_km
+            ";
+            }
+        
+            var whereClause = string.Join(" AND ", whereConditions);
+            
             var sql = @"
                 WITH filtered_businesses AS (
                     SELECT b.*
@@ -97,7 +133,7 @@ public class Ba7beshDirectApiClient(Ba7beshDbContext dbContext, ILogger<Ba7beshD
 
                     return business;
                 },
-                new { SearchTerm = $"%{searchTerm}%" },
+                new { SearchTerm = $"%{query.SearchTerm}%" },
                 splitOn: "Latitude, Longitude,category_id,tag,business_id,total_count");
 
             return new SearchBusinessesResult
@@ -254,6 +290,26 @@ public class Ba7beshDirectApiClient(Ba7beshDbContext dbContext, ILogger<Ba7beshD
         {
             logger.LogError(ex, "Error getting top rated businesses");
             throw;
+        }
+    }
+    
+    public async Task<BusinessSummary?> FindBusinessByNameAsync(string businessName, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var query = new SearchBusinessesQuery { SearchTerm = businessName };
+            var result = await SearchBusinessesAsync(query, cancellationToken);
+        
+            // Try to find an exact or close match
+            return result.Businesses.FirstOrDefault(b => 
+                       b.ArName.Equals(businessName, StringComparison.OrdinalIgnoreCase) || 
+                       b.EnName.Equals(businessName, StringComparison.OrdinalIgnoreCase)) ??
+                   result.Businesses.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error finding business by name: {BusinessName}", businessName);
+            return null;
         }
     }
 }

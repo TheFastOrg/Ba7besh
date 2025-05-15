@@ -15,16 +15,16 @@ public class Program
                 // Register configuration
                 services.Configure<BotConfiguration>(
                     context.Configuration.GetSection(BotConfiguration.ConfigSection));
-                
-                // Register API client
+            
+                // Register API client with auth
                 services.AddHttpClient<IBa7beshApiClient, Ba7beshApiClient>(client =>
                 {
                     client.BaseAddress = new Uri(context.Configuration["Api:BaseUrl"]);
                 });
-                
+            
                 // Register conversation service
                 services.AddSingleton<ConversationService>();
-                
+            
                 // Register the Bot service
                 services.AddHostedService<TelegramBotService>();
             })
