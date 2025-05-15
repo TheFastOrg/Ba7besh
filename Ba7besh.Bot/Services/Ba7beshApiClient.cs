@@ -16,26 +16,23 @@ public class Ba7beshApiClient : IBa7beshApiClient
     {
         _httpClient = httpClient;
         _logger = logger;
-        
+    
         // Get API token from configuration
         var apiToken = configuration["Api:AuthToken"];
-        var baseUrl = configuration["Api:BaseUrl"];
-        
-        _logger.LogInformation("API Configuration: BaseUrl={BaseUrl}", baseUrl);
-        
-        if (string.IsNullOrEmpty(apiToken))
+        if (!string.IsNullOrEmpty(apiToken))
         {
-            _logger.LogError("API authentication token is missing or empty");
+            // Add as Bearer token
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
+        
+            // Also add as custom header as fallback
+            _httpClient.DefaultRequestHeaders.Add("X-Bot-Api-Key", apiToken);
+        
+            _logger.LogInformation("API authentication configured");
         }
         else
         {
-            // Use both authentication methods for maximum compatibility
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
-            
-            _httpClient.DefaultRequestHeaders.Add("X-Bot-Api-Key", apiToken);
-            
-            _logger.LogInformation("API token configured and added to request headers");
+            _logger.LogError("API authentication token is missing");
         }
     }
     

@@ -23,14 +23,14 @@ public class BotAuthenticationHandler(
             return Task.FromResult(AuthenticateResult.Fail("Authorization header not found"));
 
         var authHeaderValue = authHeader.ToString();
-        
+    
         // Check if it's a Bearer token
         if (!authHeaderValue.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             return Task.FromResult(AuthenticateResult.Fail("Bearer token not found"));
 
         // Extract the token
         var token = authHeaderValue.Substring("Bearer ".Length).Trim();
-        
+    
         // Validate the token (simple comparison for bot token)
         if (string.IsNullOrEmpty(_botApiToken) || token != _botApiToken)
             return Task.FromResult(AuthenticateResult.Fail("Invalid token"));
@@ -50,6 +50,9 @@ public class BotAuthenticationHandler(
         // Create an AuthenticatedUser instance and set it in the HttpContext
         var authenticatedUser = new AuthenticatedUser("bot-service");
         Context.Items["AuthenticatedUser"] = authenticatedUser;
+    
+        // Set a flag to indicate this is a bot-authenticated request
+        Context.Items["IsBotRequest"] = true;
 
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }

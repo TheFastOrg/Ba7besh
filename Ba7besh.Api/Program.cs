@@ -18,7 +18,7 @@ builder.Services
 var app = builder.Build();
 
 app.UseDevEnvFeatures(app.Environment);
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").WithMetadata(new SkipDeviceValidationAttribute());
 app.UseBa7beshExceptionHandler();
 app.UseBa7beshPipeline();
 app.MapControllers();
