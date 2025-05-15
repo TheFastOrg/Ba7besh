@@ -186,7 +186,7 @@ public class MainStack : Stack
                     }
                 }
             }
-        }); 
+        });
         
         
         // Upload the API `.zip` file to the blob container
