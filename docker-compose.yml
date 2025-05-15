@@ -39,6 +39,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      
+  bot:
+    build:
+      context: .
+      dockerfile: Ba7besh.Bot/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - BotConfiguration__BotToken=YOUR_BOT_TOKEN_FROM_BOTFATHER
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=ba7besh;Username=ba7besh;Password=ba7besh_local_dev
+      - Api__BaseUrl=http://api:8080/api/v1
+    restart: unless-stopped
+    volumes:
+      - ./Ba7besh.Bot/appsettings.json:/app/appsettings.json:ro
 
 volumes:
   postgres_data:
