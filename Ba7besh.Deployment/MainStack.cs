@@ -211,7 +211,7 @@ public class MainStack : Stack
                     new NameValuePairArgs
                     {
                         Name = "Api__BaseUrl",
-                        Value = $"https://{appService.DefaultHostName}/api/v1"
+                        Value = appService.DefaultHostName.Apply(hostname => $"https://{hostname}/api/v1")
                     },
                     new NameValuePairArgs
                     {
