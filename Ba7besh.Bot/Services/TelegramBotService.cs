@@ -25,22 +25,33 @@ public class TelegramBotService(
     public Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting Telegram bot service");
+    
+        try {
+            // Test connection to Telegram API
+            var me = _botClient.GetMe(cancellationToken).GetAwaiter().GetResult();
+            logger.LogInformation("Successfully connected to Telegram API. Bot username: {Username}", me.Username);
+        
+            // Start receiving updates
+            var receiverOptions = new ReceiverOptions
+            {
+                AllowedUpdates = [UpdateType.Message, UpdateType.CallbackQuery],
+                DropPendingUpdates = true
+            };
 
-        // Start receiving updates
-        var receiverOptions = new ReceiverOptions
-        {
-            AllowedUpdates = [],
-            DropPendingUpdates = true
-        };
-
-        _botClient.StartReceiving(
-            HandleUpdateAsync,
-            HandlePollingErrorAsync,
-            receiverOptions,
-            _cts.Token
-        );
-
-        return Task.CompletedTask;
+            _botClient.StartReceiving(
+                HandleUpdateAsync,
+                HandlePollingErrorAsync,
+                receiverOptions,
+                _cts.Token
+            );
+        
+            logger.LogInformation("Bot receiver started successfully");
+            return Task.CompletedTask;
+        }
+        catch (Exception ex) {
+            logger.LogError(ex, "Failed to start Telegram bot service");
+            throw;
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
