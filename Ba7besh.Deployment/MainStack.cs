@@ -250,7 +250,6 @@ public class MainStack : Stack
                 }
             }
         });
-
         // Assign Storage Blob Data Reader Role to Managed Identity
         var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
         {
