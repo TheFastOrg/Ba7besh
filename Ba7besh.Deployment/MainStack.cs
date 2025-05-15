@@ -86,6 +86,7 @@ public class MainStack : Stack
             Source = new FileAsset(zipPath), // Path to the zip file in your GitHub Actions output
             ContentType = "application/zip"
         }, new CustomResourceOptions { DependsOn = spStorageContributorRoleAssignment });
+        
 
 
         var blobUrl = GetBlobReadSasUrl(blob, storageAccount, container, resourceGroup.Name);
@@ -187,6 +188,19 @@ public class MainStack : Stack
             }
         });
         
+        // Upload the API `.zip` file to the blob container
+        var botZipPath = config.Require("ba7beshBotZipPath");
+        var botZipFileName = botZipPath.Split("/").Last();
+        var botBlob = new Blob(botZipFileName, new BlobArgs
+        {
+            AccountName = storageAccount.Name,
+            ResourceGroupName = resourceGroup.Name,
+            ContainerName = container.Name,
+            Source = new FileAsset(botZipPath), // Path to the zip file in your GitHub Actions output
+            ContentType = "application/zip"
+        }, new CustomResourceOptions { DependsOn = spStorageContributorRoleAssignment });
+        var botBlobUrl = GetBlobReadSasUrl(botBlob, storageAccount, container, resourceGroup.Name);
+
         var botService = new WebApp("ba7besh-bot", new WebAppArgs
         {
             ResourceGroupName = resourceGroup.Name,
@@ -203,6 +217,11 @@ public class MainStack : Stack
                 LinuxFxVersion = "DOTNETCORE|8.0",
                 AppSettings = new[]
                 {
+                    new NameValuePairArgs
+                    {
+                        Name = "WEBSITE_RUN_FROM_PACKAGE",
+                        Value = botBlobUrl
+                    },
                     new NameValuePairArgs
                     {
                         Name = "BotConfiguration__BotToken",
@@ -231,6 +250,14 @@ public class MainStack : Stack
         var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
         {
             PrincipalId = appService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
+            RoleDefinitionId =
+                "/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
+            Scope = storageAccount.Id,
+            PrincipalType = PrincipalType.ServicePrincipal
+        });
+        var botServiceBlobRoleAssignment = new RoleAssignment("botServiceBlobRole", new RoleAssignmentArgs
+        {
+            PrincipalId = botService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
             RoleDefinitionId =
                 "/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
             Scope = storageAccount.Id,
