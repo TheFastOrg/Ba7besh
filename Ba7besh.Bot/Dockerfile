@@ -1,3 +1,8 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
@@ -14,7 +19,7 @@ WORKDIR /app/Ba7besh.Bot
 RUN dotnet publish -c Release -o out
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/runtime:8.0
+FROM base
 WORKDIR /app
 COPY --from=build /app/Ba7besh.Bot/out ./
 
@@ -22,6 +27,7 @@ COPY --from=build /app/Ba7besh.Bot/out ./
 ENV BotConfiguration__BotToken="YOUR_BOT_TOKEN" \
     Api__BaseUrl="http://api:8080/api/v1" \
     Api__AuthToken="" \
-    ASPNETCORE_ENVIRONMENT="Production"
+    ASPNETCORE_ENVIRONMENT="Production" \
+    ASPNETCORE_URLS="http://+:80"
 
 ENTRYPOINT ["dotnet", "Ba7besh.Bot.dll"]

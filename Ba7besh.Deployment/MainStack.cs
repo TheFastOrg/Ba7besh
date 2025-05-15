@@ -241,7 +241,12 @@ public class MainStack : Stack
                     {
                         Name = "ASPNETCORE_ENVIRONMENT",
                         Value = "Production"
-                    }
+                    },
+                    new NameValuePairArgs
+                    {
+                        Name = "ASPNETCORE_URLS",
+                        Value = "http://+:80"
+                    },
                 }
             }
         });
