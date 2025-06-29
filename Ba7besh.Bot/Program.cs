@@ -1,30 +1,23 @@
 ﻿using Ba7besh.Bot.Services;
 
-namespace Ba7besh.Bot;
+var builder = WebApplication.CreateBuilder(args);
 
-public class Program
+// Add services
+builder.Services.Configure<BotConfiguration>(
+    builder.Configuration.GetSection(BotConfiguration.ConfigSection));
+
+builder.Services.AddHttpClient<IBa7beshApiClient, Ba7beshApiClient>(client =>
 {
-    public static async Task Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
-        
-        // Register your services
-        builder.Services.Configure<BotConfiguration>(
-            builder.Configuration.GetSection(BotConfiguration.ConfigSection));
-        
-        builder.Services.AddHttpClient<IBa7beshApiClient, Ba7beshApiClient>(client =>
-        {
-            client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]);
-        });
-        
-        builder.Services.AddSingleton<ConversationService>();
-        builder.Services.AddHostedService<TelegramBotService>();
-        
-        var app = builder.Build();
-        
-        // Add a minimal health endpoint
-        app.MapGet("/health", () => "Healthy");
-        
-        await app.RunAsync();
-    }
-}
+    client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]);
+});
+
+builder.Services.AddSingleton<ConversationService>();
+builder.Services.AddHostedService<TelegramBotService>();  // This is the key line!
+
+var app = builder.Build();
+
+// Minimal web app - just needs to stay alive
+app.MapGet("/", () => "Ba7besh Telegram Bot is running!");
+app.MapGet("/health", () => "OK");
+
+app.Run();
