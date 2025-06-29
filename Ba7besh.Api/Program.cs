@@ -61,6 +61,7 @@ app.Use(async (context, next) =>
     
     // Authentication successful, proceed with the request
     Console.WriteLine("Authentication successful");
+    
     await next();
 });
 
