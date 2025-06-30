@@ -579,6 +579,8 @@ public class TelegramBotService(
 
                 if (state.RestaurantId != null)
                 {
+                    logger.LogInformation("Submitting review with Firebase token: {HasToken}", !string.IsNullOrEmpty(state.BackendToken));
+
                     // If we have a business ID, submit through API
                     success = await apiClient.SubmitReviewAsync(reviewCommand, state.BackendToken, cancellationToken);
                 }

@@ -46,7 +46,9 @@ public class TelegramUserAuthProvider
             if (response.IsSuccessStatusCode)
             {
                 var authResponse = await response.Content.ReadFromJsonAsync<TelegramAuthResponse>();
-    
+                _logger.LogInformation("Backend auth successful. Token: {TokenPreview}", 
+                    authResponse?.Token?.Substring(0, Math.Min(10, authResponse.Token?.Length ?? 0)) + "...");
+
                 return new AuthResult
                 {
                     Success = true,
