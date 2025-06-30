@@ -48,10 +48,17 @@ app.Use(async (context, next) =>
     if (token == null && context.Request.Headers.TryGetValue("X-Bot-Api-Key", out var apiKeyHeader))
     {
         token = apiKeyHeader.ToString();
+        if (token != botApiToken)
+        {
+            Console.WriteLine("Authentication failed: Invalid bot token");
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsJsonAsync(new { error = "Authentication failed" });
+            return;
+        }
     }
     
     // If no token was provided or it doesn't match, return 401
-    if (string.IsNullOrEmpty(token) || token != botApiToken)
+    if (string.IsNullOrEmpty(token))
     {
         Console.WriteLine("Authentication failed: " + (string.IsNullOrEmpty(token) ? "No token provided" : "Invalid token"));
         context.Response.StatusCode = 401;
