@@ -62,9 +62,12 @@ public static class ServiceCollectionExtensions
                                 .GetRequiredService<IAuthService>();
                             var user = await authService.VerifyTokenAsync(token);
                             context.HttpContext.SetAuthenticatedUser(user);
+                            Console.WriteLine($"JWT authentication successful for user: {user.UserId}");
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Console.WriteLine($"JWT authentication failed: {ex.Message}");
+
                             context.Fail("Invalid token.");
                         }
                     }
