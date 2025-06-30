@@ -44,7 +44,7 @@ public class Ba7beshApiClient : IBa7beshApiClient
             var json = System.Text.Json.JsonSerializer.Serialize(query);
             _logger.LogInformation("Sending search query: {Json}", json);
             
-            var response = await _httpClient.PostAsJsonAsync("/businesses/search", query, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync("businesses/search", query, cancellationToken);
             
             // Enhanced error logging
             if (!response.IsSuccessStatusCode)
@@ -72,7 +72,7 @@ public class Ba7beshApiClient : IBa7beshApiClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync($"/businesses/{review.BusinessId}/reviews", review, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync($"businesses/{review.BusinessId}/reviews", review, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -86,7 +86,7 @@ public class Ba7beshApiClient : IBa7beshApiClient
     {
         try
         {
-            var response = await _httpClient.GetAsync("/businesses/top-rated?minimumRating=4&limit=5", cancellationToken);
+            var response = await _httpClient.GetAsync("businesses/top-rated?minimumRating=4&limit=5", cancellationToken);
             response.EnsureSuccessStatusCode();
             
             return await response.Content.ReadFromJsonAsync<List<BusinessSummaryWithStats>>(cancellationToken) 
