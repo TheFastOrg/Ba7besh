@@ -45,7 +45,12 @@ public class Ba7beshApiClient : IBa7beshApiClient
             _logger.LogInformation("Sending search query: {Json}", json);
             
             var response = await _httpClient.PostAsJsonAsync("businesses/search", query, cancellationToken);
-            
+            // Handle 404 specifically - return empty result instead of throwing
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("No businesses found for search query: {Query}", query.SearchTerm ?? "location-based search");
+                return new SearchBusinessesResult(); // Return empty result
+            }
             // Enhanced error logging
             if (!response.IsSuccessStatusCode)
             {
