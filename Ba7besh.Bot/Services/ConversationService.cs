@@ -20,6 +20,9 @@ public class ConversationState
     public string? RestaurantName { get; set; }
     public decimal? Rating { get; set; }
     public string? ReviewText { get; set; }
+    public string? UserId { get; set; }
+    public string? BackendToken { get; set; }
+
     public DateTime LastActivity { get; set; } = DateTime.UtcNow;
 }
 

@@ -16,7 +16,8 @@ public class TelegramBotService(
     ILogger<TelegramBotService> logger,
     IOptions<BotConfiguration> botOptions,
     IBa7beshApiClient apiClient,
-    ConversationService conversationService)
+    ConversationService conversationService,
+    TelegramUserAuthProvider authProvider)
     : IHostedService
 {
     private readonly TelegramBotClient _botClient = new(botOptions.Value.BotToken);
@@ -62,68 +63,91 @@ public class TelegramBotService(
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
-        CancellationToken cancellationToken)
+    CancellationToken cancellationToken)
+{
+    try
     {
-        try
+        // Handle location messages
+        if (update.Message?.Location != null)
         {
-            // Handle location messages
-            if (update.Message?.Location != null)
-            {
-                await HandleLocationBasedSearchAsync(update.Message, cancellationToken);
-                return;
-            }
-
-            // Process only messages with text
-            if (update.Message is not { } message || message.Text is not { } messageText)
-                return;
-
-            var chatId = message.Chat.Id;
-            logger.LogInformation("Received message from {ChatId}: {Text}", chatId, messageText);
-
-            // Get the current conversation state
-            var conversation = conversationService.GetOrCreate(chatId);
-
-            // Handle commands
-            if (messageText.StartsWith("/"))
-            {
-                await HandleCommandAsync(message, messageText, cancellationToken);
-                return;
-            }
-
-            // Handle ongoing conversations based on current stage
-            switch (conversation.Stage)
-            {
-                case ConversationStage.SearchingRestaurant:
-                    await HandleSearchQueryAsync(message, messageText, cancellationToken);
-                    break;
-
-                case ConversationStage.AwaitingRestaurantName:
-                    await HandleRestaurantNameInputAsync(message, messageText, cancellationToken);
-                    break;
-
-                case ConversationStage.AwaitingRating:
-                    await HandleRatingInputAsync(message, messageText, cancellationToken);
-                    break;
-
-                case ConversationStage.AwaitingReviewText:
-                    await HandleReviewTextInputAsync(message, messageText, cancellationToken);
-                    break;
-
-                case ConversationStage.AwaitingConfirmation:
-                    await HandleConfirmationInputAsync(message, messageText, cancellationToken);
-                    break;
-
-                default:
-                    // Not in a conversation flow, treat as a search query
-                    await HandleSearchQueryAsync(message, messageText, cancellationToken);
-                    break;
-            }
+            await HandleLocationBasedSearchAsync(update.Message, cancellationToken);
+            return;
         }
-        catch (Exception ex)
+
+        // Process only messages with text
+        if (update.Message is not { } message || message.Text is not { } messageText)
+            return;
+
+        var chatId = message.Chat.Id;
+        var user = message.From;
+        
+        // Get the current conversation state
+        var conversation = conversationService.GetOrCreate(chatId);
+        
+        logger.LogInformation("Received message from {ChatId}: {Text}", chatId, messageText);
+
+        // Authenticate user automatically
+        if (user != null)
         {
-            logger.LogError(ex, "Error handling update");
+            var authResult = await authProvider.AuthenticateUserAsync(
+                user.Id, 
+                user.FirstName, 
+                user.LastName ?? "", 
+                user.Username);
+
+            if (!authResult.Success)
+            {
+                await botClient.SendMessage(
+                    chatId,
+                    "عذراً، حدث خطأ في التحقق من الهوية. الرجاء المحاولة مرة أخرى.",
+                    cancellationToken: cancellationToken);
+                return;
+            }
+
+            // Store auth info in conversation state
+            conversation.UserId = authResult.UserId;
+            conversation.BackendToken = authResult.BackendToken;
+    
+            // Log successful authentication
+            logger.LogInformation("User {UserId} authenticated successfully", authResult.UserId);
+        }
+
+        // Handle commands
+        if (messageText.StartsWith("/"))
+        {
+            await HandleCommandAsync(message, messageText, cancellationToken);
+            return;
+        }
+
+        // Handle ongoing conversations based on current stage
+        switch (conversation.Stage)
+        {
+            case ConversationStage.SearchingRestaurant:
+                await HandleSearchQueryAsync(message, messageText, cancellationToken);
+                break;
+
+            case ConversationStage.AwaitingRestaurantName:
+                await HandleRestaurantNameInputAsync(message, messageText, cancellationToken);
+                break;
+
+            case ConversationStage.AwaitingRating:
+                await HandleRatingInputAsync(message, messageText, cancellationToken);
+                break;
+
+            case ConversationStage.AwaitingReviewText:
+                await HandleReviewTextInputAsync(message, messageText, cancellationToken);
+                break;
+
+            default:
+                await HandleSearchQueryAsync(message, messageText, cancellationToken);
+                break;
         }
     }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error handling update");
+    }
+}
 
     private async Task HandleCommandAsync(Message message, string commandText, CancellationToken cancellationToken)
     {
@@ -543,9 +567,8 @@ public class TelegramBotService(
                 // Create the review command
                 var reviewCommand = new SubmitReviewCommand
                 {
-                    BusinessId =
-                        state.RestaurantId ?? "suggested_business", // Use a placeholder if we don't have a real ID
-                    UserId = chatId.ToString(), // Using chatId as userId
+                    BusinessId = state.RestaurantId ?? "suggested_business",
+                    UserId = state.UserId ?? throw new InvalidOperationException("User not authenticated"), // FIXED!
                     OverallRating = state.Rating ?? 5,
                     Content = state.ReviewText
                 };
@@ -555,7 +578,7 @@ public class TelegramBotService(
                 if (state.RestaurantId != null)
                 {
                     // If we have a business ID, submit through API
-                    success = await apiClient.SubmitReviewAsync(reviewCommand, cancellationToken);
+                    success = await apiClient.SubmitReviewAsync(reviewCommand, state.BackendToken, cancellationToken);
                 }
                 else
                 {

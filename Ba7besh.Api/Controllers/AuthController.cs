@@ -25,7 +25,24 @@ public class AuthController(IAmACommandProcessor commandProcessor) : ControllerB
         await commandProcessor.SendAsync(command);
         return Ok("Authentication via phone was successful!");
     }
+    [HttpPost("telegram")]
+    public async Task<IActionResult> TelegramAuth([FromBody] TelegramAuthRequest request)
+    {
+        var command = new TelegramAuthCommand(
+            request.TelegramId, 
+            request.FirstName, 
+            request.LastName, 
+            request.Username);
+    
+        await commandProcessor.SendAsync(command);
+    
+    
+        return Ok(command.Response);
+    }
 }
 
 public record GoogleAuthRequest(string IdToken);
 public record PhoneAuthRequest(string IdToken);
+public record TelegramAuthRequest(long TelegramId, string FirstName, string LastName, string? Username);
+
+

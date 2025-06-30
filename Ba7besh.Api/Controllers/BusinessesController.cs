@@ -79,7 +79,7 @@ public class BusinessesController(IQueryProcessor queryProcessor, IAmACommandPro
     }
 
     [HttpPost("{businessId}/reviews")]
-    [Authorize(Policy = AuthorizationPolicies.BotService)]
+    [Authorize]
     public async Task<IActionResult> SubmitReview(
         string businessId,
         [FromBody] SubmitReviewRequest request,

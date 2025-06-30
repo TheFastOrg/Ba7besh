@@ -9,7 +9,7 @@ public interface IBa7beshApiClient
         SearchBusinessesQuery query,
         CancellationToken cancellationToken = default);
 
-    Task<bool> SubmitReviewAsync(SubmitReviewCommand review, CancellationToken cancellationToken = default);
+    Task<bool> SubmitReviewAsync(SubmitReviewCommand review, string? userFirebaseToken = null, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<BusinessSummaryWithStats>> GetTopRatedBusinessesAsync(
         CancellationToken cancellationToken = default);

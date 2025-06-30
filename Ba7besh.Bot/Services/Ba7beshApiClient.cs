@@ -68,11 +68,26 @@ public class Ba7beshApiClient : IBa7beshApiClient
         }
     }
 
-    public async Task<bool> SubmitReviewAsync(SubmitReviewCommand review, CancellationToken cancellationToken = default)
+    public async Task<bool> SubmitReviewAsync(SubmitReviewCommand review, string? userFirebaseToken = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync($"businesses/{review.BusinessId}/reviews", review, cancellationToken);
+            var request = new HttpRequestMessage(HttpMethod.Post, $"businesses/{review.BusinessId}/reviews");
+        
+            // Use Firebase token for user authentication if available
+            if (!string.IsNullOrEmpty(userFirebaseToken))
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", userFirebaseToken);
+            }
+            // If no Firebase token provided, fallback to bot token (already set in _httpClient.DefaultRequestHeaders)
+        
+            request.Content = JsonContent.Create(new SubmitReviewCommand 
+            { 
+                OverallRating = review.OverallRating, 
+                Content = review.Content 
+            });
+        
+            var response = await _httpClient.SendAsync(request, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)

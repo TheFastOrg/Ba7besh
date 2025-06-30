@@ -12,7 +12,11 @@ builder.Services.AddHttpClient<IBa7beshApiClient, Ba7beshApiClient>(client =>
 });
 
 builder.Services.AddSingleton<ConversationService>();
-builder.Services.AddHostedService<TelegramBotService>();  // This is the key line!
+builder.Services.AddHttpClient<TelegramUserAuthProvider>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]);
+});
+builder.Services.AddHostedService<TelegramBotService>();
 
 var app = builder.Build();
 

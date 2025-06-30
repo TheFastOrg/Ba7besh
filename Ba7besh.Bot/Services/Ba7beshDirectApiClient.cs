@@ -151,7 +151,7 @@ public class Ba7beshDirectApiClient(Ba7beshDbContext dbContext, ILogger<Ba7beshD
         }
     }
 
-    public async Task<bool> SubmitReviewAsync(SubmitReviewCommand review, CancellationToken cancellationToken = default)
+    public async Task<bool> SubmitReviewAsync(SubmitReviewCommand review, string? userFirebaseToken, CancellationToken cancellationToken = default)
     {
         try
         {

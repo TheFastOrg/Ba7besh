@@ -109,6 +109,60 @@ public class FirebaseAuthService : IAuthService
             };
         }
     }
+    public async Task<AuthenticationResult> AuthenticateWithTelegramAsync(long telegramId, string firstName, string lastName, string? username)
+    {
+        try
+        {
+            // Create a unique UID for this Telegram user
+            var uid = $"telegram_{telegramId}";
+        
+            var existingUser = await GetUserAsync(uid);
+            if (existingUser != null)
+            {
+                var customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
+                return new AuthenticationResult
+                {
+                    Success = true,
+                    UserId = existingUser.Uid,
+                    Token = customToken,
+                    IsNewUser = false
+                };
+            }
+
+            // Create new user with Telegram data
+            var claims = new Dictionary<string, object>
+            {
+                { "telegram_id", telegramId },
+                { "first_name", firstName },
+                { "provider", "telegram" }
+            };
+
+            if (!string.IsNullOrEmpty(lastName))
+                claims["last_name"] = lastName;
+        
+            if (!string.IsNullOrEmpty(username))
+                claims["username"] = username;
+
+            var newUser = await CreateNewUserAsync(uid, claims);
+            var newCustomToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(uid);
+        
+            return new AuthenticationResult
+            {
+                Success = true,
+                UserId = newUser.Uid,
+                Token = newCustomToken,
+                IsNewUser = true
+            };
+        }
+        catch (FirebaseAuthException ex)
+        {
+            return new AuthenticationResult
+            {
+                Success = false,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
 
     private static async Task<UserRecord?> GetUserAsync(string uid)
     {
@@ -128,7 +182,8 @@ public class FirebaseAuthService : IAuthService
         {
             Uid = uid,
             Email = claims.GetValueOrDefault("email")?.ToString(),
-            DisplayName = claims.GetValueOrDefault("name")?.ToString(),
+            DisplayName = claims.GetValueOrDefault("name")?.ToString() 
+                          ?? $"{claims.GetValueOrDefault("first_name")} {claims.GetValueOrDefault("last_name")}".Trim(),
             PhotoUrl = claims.GetValueOrDefault("picture")?.ToString()
         };
 
