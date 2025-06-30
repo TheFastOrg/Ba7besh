@@ -74,6 +74,13 @@ public class Ba7beshApiClient : IBa7beshApiClient
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"businesses/{review.BusinessId}/reviews");
     
+            _logger.LogInformation("Bot token in default headers: {HasBotToken}", 
+                _httpClient.DefaultRequestHeaders.Authorization != null);
+            _logger.LogInformation("Firebase token provided: {HasFirebaseToken}", 
+                !string.IsNullOrEmpty(userFirebaseToken));
+            _logger.LogInformation("Firebase token value: {FirebaseToken}", 
+                string.IsNullOrEmpty(userFirebaseToken) ? "NULL" : userFirebaseToken.Substring(0, Math.Min(20, userFirebaseToken.Length)) + "...");
+
             // FIXED: Always use Firebase token for user authentication when available
             if (!string.IsNullOrEmpty(userFirebaseToken))
             {
@@ -85,6 +92,10 @@ public class Ba7beshApiClient : IBa7beshApiClient
                 _logger.LogWarning("No Firebase token provided - review submission may fail authentication");
             }
         
+            
+            _logger.LogInformation("Final Authorization header: {AuthHeader}", 
+                request.Headers.Authorization?.ToString() ?? "NULL");
+            
             // Bot token is already set in _httpClient.DefaultRequestHeaders as X-Bot-Api-Key
             // This ensures device validation is bypassed
     

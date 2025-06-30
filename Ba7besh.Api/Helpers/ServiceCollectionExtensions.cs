@@ -53,6 +53,8 @@ public static class ServiceCollectionExtensions
                     OnMessageReceived = async (context) =>
                     {
                         var token = context.Token;
+                        Console.WriteLine($"JWT OnMessageReceived called with token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
+
                         if (string.IsNullOrEmpty(token))
                             return;
 
