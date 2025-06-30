@@ -78,21 +78,36 @@ public class Ba7beshApiClient : IBa7beshApiClient
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"businesses/{review.BusinessId}/reviews");
-        
-            // Use Firebase token for user authentication if available
+    
+            // FIXED: Always use Firebase token for user authentication when available
             if (!string.IsNullOrEmpty(userFirebaseToken))
             {
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", userFirebaseToken);
+                _logger.LogInformation("Using Firebase token for user authentication");
             }
-            // If no Firebase token provided, fallback to bot token (already set in _httpClient.DefaultRequestHeaders)
+            else
+            {
+                _logger.LogWarning("No Firebase token provided - review submission may fail authentication");
+            }
         
+            // Bot token is already set in _httpClient.DefaultRequestHeaders as X-Bot-Api-Key
+            // This ensures device validation is bypassed
+    
             request.Content = JsonContent.Create(new SubmitReviewCommand 
             { 
                 OverallRating = review.OverallRating, 
                 Content = review.Content 
             });
-        
+    
             var response = await _httpClient.SendAsync(request, cancellationToken);
+        
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Submit review failed: Status={Status}, Error={Error}", 
+                    response.StatusCode, errorContent);
+            }
+        
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
