@@ -137,7 +137,9 @@ public class TelegramBotService(
             case ConversationStage.AwaitingReviewText:
                 await HandleReviewTextInputAsync(message, messageText, cancellationToken);
                 break;
-
+            case ConversationStage.AwaitingConfirmation:
+                await HandleConfirmationInputAsync(message, messageText, cancellationToken);
+                break;
             default:
                 await HandleSearchQueryAsync(message, messageText, cancellationToken);
                 break;
