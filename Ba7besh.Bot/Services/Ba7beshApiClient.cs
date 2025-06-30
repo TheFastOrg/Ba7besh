@@ -21,11 +21,6 @@ public class Ba7beshApiClient : IBa7beshApiClient
         var apiToken = configuration["Api:AuthToken"];
         if (!string.IsNullOrEmpty(apiToken))
         {
-            // Add as Bearer token
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiToken);
-        
-            // Also add as custom header as fallback
             _httpClient.DefaultRequestHeaders.Add("X-Bot-Api-Key", apiToken);
         
             _logger.LogInformation("API authentication configured");
