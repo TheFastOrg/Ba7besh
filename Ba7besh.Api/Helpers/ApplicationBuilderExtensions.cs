@@ -50,9 +50,9 @@ public static class ApplicationBuilderExtensions
     public static IApplicationBuilder UseBa7beshPipeline(this IApplicationBuilder app)
     {
         app.UseMiddleware<LoggingMiddleware>();
+        app.UseMiddleware<DeviceValidationMiddleware>();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseMiddleware<DeviceValidationMiddleware>();
         return app;
     }
 }
