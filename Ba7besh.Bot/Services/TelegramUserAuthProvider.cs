@@ -2,7 +2,6 @@ namespace Ba7besh.Bot.Services;
 
 public class TelegramUserAuthProvider
 {
-    private readonly string _secretKey;
     private readonly HttpClient _httpClient;
     private readonly ILogger<TelegramUserAuthProvider> _logger;
 
@@ -11,8 +10,6 @@ public class TelegramUserAuthProvider
         HttpClient httpClient,
         ILogger<TelegramUserAuthProvider> logger)
     {
-        _secretKey = configuration["BotConfiguration:SecretKey"] 
-                     ?? throw new InvalidOperationException("Bot secret key is not configured");
         var botApiToken = configuration["Api:AuthToken"]
                            ?? throw new InvalidOperationException("Bot API token is not configured");
         _httpClient = httpClient;
