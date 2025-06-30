@@ -41,7 +41,7 @@ public class TelegramUserAuthProvider
             };
 
             // Call backend auth endpoint
-            var response = await _httpClient.PostAsJsonAsync("/auth/telegram", authRequest);
+            var response = await _httpClient.PostAsJsonAsync("auth/telegram", authRequest);
         
             if (response.IsSuccessStatusCode)
             {
