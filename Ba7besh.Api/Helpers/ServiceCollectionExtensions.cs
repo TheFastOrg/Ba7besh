@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Claims;
 using Ba7besh.Api.Authentication;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
@@ -82,7 +83,25 @@ public static class ServiceCollectionExtensions
                                 .GetRequiredService<IAuthService>();
                             var user = await authService.VerifyTokenAsync(token);
                             context.HttpContext.SetAuthenticatedUser(user);
+                            
+                            // ALSO set as authenticated principal for [Authorize] to work
+                            var claims = new[]
+                            {
+                                new Claim(ClaimTypes.NameIdentifier, user.UserId),
+                                new Claim(ClaimTypes.Name, user.UserId),
+                                new Claim("uid", user.UserId) // Firebase style claim
+                            };
+                
+                            var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
+                            var principal = new ClaimsPrincipal(identity);
+                
+                            // This makes [Authorize] work
+                            context.Principal = principal;
+                            context.Success();
+                
                             Console.WriteLine($"JWT authentication successful for user: {user.UserId}");
+
+                            
                         }
                         catch (Exception ex)
                         {
