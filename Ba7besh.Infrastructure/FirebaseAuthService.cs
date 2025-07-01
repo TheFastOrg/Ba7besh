@@ -3,6 +3,8 @@ using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 
+using System.IdentityModel.Tokens.Jwt;
+
 namespace Ba7besh.Infrastructure;
 
 public class FirebaseAuthService : IAuthService
@@ -20,8 +22,35 @@ public class FirebaseAuthService : IAuthService
     {
         try
         {
+            // First try to verify as an ID token
             var decodedToken = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token);
             return new AuthenticatedUser(decodedToken.Uid);
+        }
+        catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.InvalidIdToken)
+        {
+            try
+            {
+                // If ID token verification fails, try to decode as custom token
+                var handler = new JwtSecurityTokenHandler();
+            
+                if (handler.CanReadToken(token))
+                {
+                    var jwt = handler.ReadJwtToken(token);
+                    var uid = jwt.Claims.FirstOrDefault(c => c.Type == "uid")?.Value;
+                
+                    if (!string.IsNullOrEmpty(uid))
+                    {
+                        return new AuthenticatedUser(uid);
+                    }
+                }
+            }
+            catch (Exception innerEx)
+            {
+                // Log the inner exception but fall through to original exception
+                Console.WriteLine($"Custom token parsing failed: {innerEx.Message}");
+            }
+        
+            throw new UnauthorizedAccessException("Token verification failed.", ex);
         }
         catch (FirebaseAuthException ex)
         {
