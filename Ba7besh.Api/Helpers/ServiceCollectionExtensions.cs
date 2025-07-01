@@ -54,9 +54,27 @@ public static class ServiceCollectionExtensions
                     {
                         var token = context.Token;
                         Console.WriteLine($"JWT OnMessageReceived called with token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
+                        Console.WriteLine($"OnMessageReceived - context.Token: {(context.Token ?? "NULL")}");
+                        Console.WriteLine($"OnMessageReceived - Authorization header: {context.Request.Headers.Authorization.ToString()}");
 
+                        // Manual token extraction if context.Token is null
                         if (string.IsNullOrEmpty(token))
+                        {
+                            var authHeader = context.Request.Headers.Authorization.ToString();
+                            Console.WriteLine($"Trying manual extraction from: {authHeader}");
+                
+                            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                token = authHeader.Substring("Bearer ".Length).Trim();
+                                Console.WriteLine($"Manually extracted token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
+                            }
+                        }
+            
+                        if (string.IsNullOrEmpty(token))
+                        {
+                            Console.WriteLine("No token found - skipping authentication");
                             return;
+                        }
 
                         try
                         {
