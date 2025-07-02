@@ -1,7 +1,7 @@
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
-using Ba7besh.Api.Authentication;
+using Ba7besh.Api.Bot.Services;
 using Ba7besh.Application.Authentication;
 using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.DeviceManagement;
@@ -54,23 +54,27 @@ public static class ServiceCollectionExtensions
                     OnMessageReceived = async (context) =>
                     {
                         var token = context.Token;
-                        Console.WriteLine($"JWT OnMessageReceived called with token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
+                        Console.WriteLine(
+                            $"JWT OnMessageReceived called with token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
                         Console.WriteLine($"OnMessageReceived - context.Token: {(context.Token ?? "NULL")}");
-                        Console.WriteLine($"OnMessageReceived - Authorization header: {context.Request.Headers.Authorization.ToString()}");
+                        Console.WriteLine(
+                            $"OnMessageReceived - Authorization header: {context.Request.Headers.Authorization.ToString()}");
 
                         // Manual token extraction if context.Token is null
                         if (string.IsNullOrEmpty(token))
                         {
                             var authHeader = context.Request.Headers.Authorization.ToString();
                             Console.WriteLine($"Trying manual extraction from: {authHeader}");
-                
-                            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+
+                            if (!string.IsNullOrEmpty(authHeader) &&
+                                authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                             {
                                 token = authHeader.Substring("Bearer ".Length).Trim();
-                                Console.WriteLine($"Manually extracted token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
+                                Console.WriteLine(
+                                    $"Manually extracted token: {(string.IsNullOrEmpty(token) ? "NULL" : token.Substring(0, Math.Min(20, token.Length)) + "...")}");
                             }
                         }
-            
+
                         if (string.IsNullOrEmpty(token))
                         {
                             Console.WriteLine("No token found - skipping authentication");
@@ -83,7 +87,7 @@ public static class ServiceCollectionExtensions
                                 .GetRequiredService<IAuthService>();
                             var user = await authService.VerifyTokenAsync(token);
                             context.HttpContext.SetAuthenticatedUser(user);
-                            
+
                             // ALSO set as authenticated principal for [Authorize] to work
                             var claims = new[]
                             {
@@ -91,17 +95,17 @@ public static class ServiceCollectionExtensions
                                 new Claim(ClaimTypes.Name, user.UserId),
                                 new Claim("uid", user.UserId) // Firebase style claim
                             };
-                
+
                             var identity = new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme);
                             var principal = new ClaimsPrincipal(identity);
-                
+
                             // This makes [Authorize] work
                             context.Principal = principal;
                             context.Success();
-                
+
                             Console.WriteLine($"JWT authentication successful for user: {user.UserId}");
 
-                            
+
                         }
                         catch (Exception ex)
                         {
@@ -111,17 +115,12 @@ public static class ServiceCollectionExtensions
                         }
                     }
                 };
-            })
-            .AddScheme<AuthenticationSchemeOptions, BotAuthenticationHandler>("BotAuth", null);
-            
+            });
 
         services.AddAuthorizationBuilder()
             .AddPolicy(
                 AuthorizationPolicies.AdminOnly,
                 policy => policy.Requirements.Add(new RoleRequirement(UserRole.Admin))
-            ).AddPolicy(
-                AuthorizationPolicies.BotService,
-                policy => policy.RequireRole("BotService")
             );
             
         return services;
@@ -163,6 +162,21 @@ public static class ServiceCollectionExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         
+        return services;
+    }
+    
+    public static IServiceCollection AddBa7beshBot(this IServiceCollection services)
+    {
+        // Add bot configuration
+        services.Configure<BotConfiguration>(
+            services.BuildServiceProvider().GetRequiredService<IConfiguration>()
+                .GetSection(BotConfiguration.ConfigSection));
+
+        // Add bot services
+        services.AddSingleton<ConversationService>();
+        services.AddScoped<TelegramUserAuthProvider>();
+        services.AddHostedService<TelegramBotService>();
+
         return services;
     }
 }

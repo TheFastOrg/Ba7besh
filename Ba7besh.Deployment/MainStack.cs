@@ -181,75 +181,13 @@ public class MainStack : Stack
                     },
                     new NameValuePairArgs
                     {
-                        Name = "BotApi__AuthToken", 
-                        Value = config.Require("botApiToken")
-                    }
-                }
-            }
-        });
-        
-        // Upload the API `.zip` file to the blob container
-        var botZipPath = config.Require("ba7beshBotZipPath");
-        var botZipFileName = botZipPath.Split("/").Last();
-        var botBlob = new Blob(botZipFileName, new BlobArgs
-        {
-            AccountName = storageAccount.Name,
-            ResourceGroupName = resourceGroup.Name,
-            ContainerName = container.Name,
-            Source = new FileAsset(botZipPath), // Path to the zip file in your GitHub Actions output
-            ContentType = "application/zip"
-        }, new CustomResourceOptions { DependsOn = spStorageContributorRoleAssignment });
-        var botBlobUrl = GetBlobReadSasUrl(botBlob, storageAccount, container, resourceGroup.Name);
-
-        var botService = new WebApp("ba7besh-bot", new WebAppArgs
-        {
-            ResourceGroupName = resourceGroup.Name,
-            Name = "ba7besh-bot",
-            Identity = new ManagedServiceIdentityArgs
-            {
-                Type = ManagedServiceIdentityType.SystemAssigned
-            },
-            ServerFarmId = appServicePlan.Id,
-            Location = azureLocation,
-            SiteConfig = new SiteConfigArgs
-            {
-                Http20Enabled = true,
-                LinuxFxVersion = "DOTNETCORE|8.0",
-                AppSettings = new[]
-                {
-                    new NameValuePairArgs
-                    {
-                        Name = "WEBSITE_RUN_FROM_PACKAGE",
-                        Value = botBlobUrl
-                    },
-                    new NameValuePairArgs
-                    {
                         Name = "BotConfiguration__BotToken",
                         Value = config.Require("botToken") 
                     },
-                    new NameValuePairArgs
-                    {
-                        Name = "Api__BaseUrl",
-                        Value = appService.DefaultHostName.Apply(hostname => $"https://{hostname}/api/v1/")
-                    },
-                    new NameValuePairArgs
-                    {
-                        Name = "Api__AuthToken", 
-                        Value = config.Require("botApiToken") 
-                    },
-                    new NameValuePairArgs
-                    {
-                        Name = "ASPNETCORE_ENVIRONMENT",
-                        Value = "Production"
-                    },
-                    new NameValuePairArgs
-                    {
-                        Name = "ASPNETCORE_URLS",
-                        Value = "http://+:80"
-                    },
                 }
             }
         });
+
         // Assign Storage Blob Data Reader Role to Managed Identity
         var appServiceBlobRoleAssignment = new RoleAssignment("appServiceBlobRole", new RoleAssignmentArgs
         {
@@ -259,20 +197,10 @@ public class MainStack : Stack
             Scope = storageAccount.Id,
             PrincipalType = PrincipalType.ServicePrincipal
         });
-        var botServiceBlobRoleAssignment = new RoleAssignment("botServiceBlobRole", new RoleAssignmentArgs
-        {
-            PrincipalId = botService.Identity.Apply(identity => identity.PrincipalId), // App Service Managed Identity
-            RoleDefinitionId =
-                "/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1", //Storage Blob Data Reader,
-            Scope = storageAccount.Id,
-            PrincipalType = PrincipalType.ServicePrincipal
-        });
         Endpoint = appService.DefaultHostName.Apply(hostname => $"https://{hostname}");
-        BotEndpoint = botService.DefaultHostName.Apply(hostname => $"https://{hostname}");
     }
 
     [Output] public Output<string> Endpoint { get; set; }
-    [Output] public Output<string> BotEndpoint { get; set; }
     [Output] public Output<string> CdnEndpoint { get; set; }
     private static Output<string> GetBlobReadSasUrl(Blob blob, StorageAccount account, BlobContainer container,
         Output<string> resourceGroupName)

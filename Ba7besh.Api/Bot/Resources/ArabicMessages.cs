@@ -1,4 +1,4 @@
-namespace Ba7besh.Bot.Resources;
+namespace Ba7besh.Api.Bot.Resources;
 
 public static class ArabicMessages
 {

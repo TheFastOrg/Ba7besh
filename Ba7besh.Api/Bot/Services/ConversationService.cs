@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Ba7besh.Bot.Services;
+namespace Ba7besh.Api.Bot.Services;
 
 public enum ConversationStage
 {

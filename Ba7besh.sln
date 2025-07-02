@@ -15,8 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Application.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Application", "Ba7besh.Application\Ba7besh.Application.csproj", "{949B6EDC-8D3E-4137-AD30-406103B0ABBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ba7besh.Bot", "Ba7besh.Bot\Ba7besh.Bot.csproj", "{8F82CA0D-A420-42D5-A5ED-24B4A01162BA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,9 +41,5 @@ Global
 		{949B6EDC-8D3E-4137-AD30-406103B0ABBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{949B6EDC-8D3E-4137-AD30-406103B0ABBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{949B6EDC-8D3E-4137-AD30-406103B0ABBB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8F82CA0D-A420-42D5-A5ED-24B4A01162BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F82CA0D-A420-42D5-A5ED-24B4A01162BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F82CA0D-A420-42D5-A5ED-24B4A01162BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F82CA0D-A420-42D5-A5ED-24B4A01162BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

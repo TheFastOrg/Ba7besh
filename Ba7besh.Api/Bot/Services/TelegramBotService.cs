@@ -9,13 +9,17 @@ using Ba7besh.Application.BusinessDiscovery;
 using Ba7besh.Application.ReviewManagement;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Paramore.Brighter;
+using Paramore.Darker;
+using Message = Telegram.Bot.Types.Message;
 
-namespace Ba7besh.Bot.Services;
+namespace Ba7besh.Api.Bot.Services;
 
 public class TelegramBotService(
     ILogger<TelegramBotService> logger,
     IOptions<BotConfiguration> botOptions,
-    IBa7beshApiClient apiClient,
+    IQueryProcessor queryProcessor,
+    IAmACommandProcessor commandProcessor,
     ConversationService conversationService,
     TelegramUserAuthProvider authProvider)
     : IHostedService
@@ -257,8 +261,8 @@ public class TelegramBotService(
 
         try
         {
-            var searchResult = await apiClient.SearchBusinessesAsync(new SearchBusinessesQuery{ SearchTerm = searchQuery}, cancellationToken);
-
+            var query = new SearchBusinessesQuery{ SearchTerm = searchQuery};
+            var searchResult = await queryProcessor.ExecuteAsync(query, cancellationToken);
             if (searchResult.Businesses.Count == 0)
             {
                 await _botClient.SendMessage(
@@ -314,7 +318,7 @@ public class TelegramBotService(
                 RadiusKm = 5
             };
 
-            var searchResult = await apiClient.SearchBusinessesAsync(searchQuery, cancellationToken);
+            var searchResult = await queryProcessor.ExecuteAsync(searchQuery, cancellationToken);
 
             if (searchResult.Businesses.Count == 0)
             {
@@ -387,7 +391,9 @@ public class TelegramBotService(
 
         try
         {
-            var recommendations = await apiClient.GetTopRatedBusinessesAsync(cancellationToken);
+            var conversationState = conversationService.GetOrCreate(chatId);
+            var query = new GetPersonalizedRecommendationsQuery(conversationState.UserId);
+            var recommendations = await queryProcessor.ExecuteAsync(query, cancellationToken);
 
             if (recommendations.Count == 0)
             {
@@ -417,8 +423,12 @@ public class TelegramBotService(
         var chatId = message.Chat.Id;
 
         // First try to find the business in the database
-        var business = await apiClient.FindBusinessByNameAsync(restaurantName, cancellationToken);
-
+        var query = new SearchBusinessesQuery { SearchTerm = restaurantName };
+        var queryResult = await queryProcessor.ExecuteAsync(query, cancellationToken);
+        var business = queryResult.Businesses.FirstOrDefault(b =>
+                           b.ArName.Equals(restaurantName, StringComparison.OrdinalIgnoreCase) ||
+                           b.EnName.Equals(restaurantName, StringComparison.OrdinalIgnoreCase)) ??
+                       queryResult.Businesses.FirstOrDefault();
         if (business == null)
         {
             // If business not found, we can still proceed but note that we'll use a temp ID
@@ -581,8 +591,8 @@ public class TelegramBotService(
                 {
                     logger.LogInformation("Submitting review with Firebase token: {HasToken}", !string.IsNullOrEmpty(state.BackendToken));
 
-                    // If we have a business ID, submit through API
-                    success = await apiClient.SubmitReviewAsync(reviewCommand, state.BackendToken, cancellationToken);
+                    await commandProcessor.SendAsync(reviewCommand, cancellationToken: cancellationToken);
+                    success = true;
                 }
                 else
                 {

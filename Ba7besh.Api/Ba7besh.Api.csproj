@@ -34,6 +34,7 @@
       <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
       <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
+      <PackageReference Include="Telegram.Bot" Version="22.5.1" />
     </ItemGroup>
 
     <ItemGroup>

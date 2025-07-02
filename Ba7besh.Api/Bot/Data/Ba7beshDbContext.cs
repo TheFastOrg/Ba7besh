@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace Ba7besh.Bot.Data;
+namespace Ba7besh.Api.Bot.Data;
 
 public class Ba7beshDbContext : IDisposable
 {
